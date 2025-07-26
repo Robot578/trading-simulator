@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трейдинг-симулятор</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: #121826;
+            color: #ffffff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .asset-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .down {
+            color: #ef4444;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button.sell {
+            background: #ef4444;
+        }
+        .trade-panel {
+            display: flex;
+            margin-top: 10px;
+        }
+        input {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: white;
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .chart-container {
+            height: 200px;
+            margin: 20px 0;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💰 Crypto Trader</h1>
+        <p>Виртуальный трейдинг в Telegram</p>
+    </div>
+
+    <div class="balance-card">
+        <h3>Ваш баланс</h3>
+        <p id="usdt-balance">10000.00 USDT</p>
+        <div id="portfolio">
+            <!-- Сюда будут добавляться активы -->
+        </div>
+    </div>
+
+    <div class="asset-card">
+        <div>
+            <h3>BTC/USDT</h3>
+            <p class="price" id="btc-price">50000.00 <span id="btc-change">(+2.5%)</span></p>
+        </div>
+        <div>
+            <p>RSI: <span id="rsi">56.3</span></p>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <!-- Здесь будет график -->
+        <p style="text-align: center;">График цены BTC</p>
+    </div>
+
+    <div class="trade-panel">
+        <input type="number" id="trade-amount" placeholder="Сумма" value="100">
+        <button onclick="executeTrade('BUY', 'BTC')">Купить</button>
+        <button class="sell" onclick="executeTrade('SELL', 'BTC')">Продать</button>
+    </div>
+
+    <div id="trade-history">
+        <h3>Последние сделки</h3>
+        <!-- Сюда будет добавляться история -->
+    </div>
+
+    <script>
+        // Имитация данных из твоего Python-кода
+        let state = {
+            balance: 10000.00,
+            portfolio: {
+                "BTC": 0,
+                "ETH": 0
+            },
+            history: []
+        };
+
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('usdt-balance').textContent = state.balance.toFixed(2) + ' USDT';
+
+            let portfolioHTML = '';
+            for (const [asset, amount] of Object.entries(state.portfolio)) {
+                if (amount > 0) {
+                    portfolioHTML += `<p>${asset}: ${amount.toFixed(6)}</p>`;
+                }
+            }
+            document.getElementById('portfolio').innerHTML = portfolioHTML || '<p>Нет активов</p>';
+
+            // Здесь можно добавить обновление графика через Chart.js
+        }
+
+        // Имитация торговли (можно заменить на вызовы к твоему API)
+        function executeTrade(action, asset) {
+            const amount = parseFloat(document.getElementById('trade-amount').value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('Введите корректную сумму');
+                return;
+            }
+
+            // Логика из твоего execute_trade()
+            if (action === 'BUY') {
+                if (amount > state.balance) {
+                    alert('Недостаточно средств');
+                    return;
+                }
+                const price = 50000; // Здесь можно получать реальную цену
+                const amountBought = amount / price;
+                state.balance -= amount;
+                state.portfolio[asset] = (state.portfolio[asset] || 0) + amountBought;
+
+                state.history.push({
+                    type: 'BUY',
+                    asset,
+                    amount: amountBought,
+                    price,
+                    total: amount,
+                    timestamp: new Date().toLocaleString()
+                });
+
+                alert(`Куплено ${amountBought.toFixed(6)} ${asset} за ${amount.toFixed(2)} USDT`);
+            } else if (action === 'SELL') {
+                if (!state.portfolio[asset] || state.portfolio[asset] < amount) {
+                    alert(`Недостаточно ${asset} для продажи`);
+                    return;
+                }
+                const price = 50000; // Здесь можно получать реальную цену
+                const totalReceived = amount * price;
+                state.balance += totalReceived;
+                state.portfolio[asset] -= amount;
+
+                state.history.push({
+                    type: 'SELL',
+                    asset,
+                    amount,
+                    price,
+                    total: totalReceived,
+                    timestamp: new Date().toLocaleString()
+                });
+
+                alert(`Продано ${amount.toFixed(6)} ${asset} за ${totalReceived.toFixed(2)} USDT`);
+            }
+
+            updateUI();
+            updateHistory();
+        }
+
+        // Обновление истории сделок
+        function updateHistory() {
+            let historyHTML = '';
+            state.history.slice().reverse().slice(0, 5).forEach(trade => {
+                historyHTML += `
+                    <div style="margin-bottom: 10px; padding: 10px; background: #1e293b; border-radius: 8px;">
+                        <p><strong>${trade.type === 'BUY' ? '🟢 Куплено' : '🔴 Продано'} ${trade.asset}</strong></p>
+                        <p>${trade.amount.toFixed(6)} ${trade.asset} по ${trade.price.toFixed(2)} USDT</p>
+                        <p>Сумма: ${trade.total.toFixed(2)} USDT</p>
+                        <p style="font-size: 12px; color: #94a3b8;">${trade.timestamp}</p>
+                    </div>
+                `;
+            });
+            document.getElementById('trade-history').innerHTML = '<h3>Последние сделки</h3>' +
+                (historyHTML || '<p>Нет сделок</p>');
+        }
+
+        // Инициализация
+        updateUI();
+        updateHistory();
+
+        // Здесь можно добавить WebSocket для реальных цен
+    </script>
+</body>
+</html>

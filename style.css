@@ -1,0 +1,129 @@
+/* Основные стили */
+:root {
+  --primary: #2563eb;  /* Синий акцент */
+  --profit: #10b981;   /* Зелёный для прибыли */
+  --loss: #ef4444;     /* Красный для убытка */
+  --bg: #0f172a;       /* Тёмный фон */
+  --card: #1e293b;     /* Карточки */
+  --text: #e2e8f0;     /* Текст */
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Шапка */
+.header {
+  background: var(--card);
+  padding: 15px;
+  text-align: center;
+  border-bottom: 1px solid #334155;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* Карточка баланса */
+.balance-card {
+  background: var(--card);
+  margin: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.balance-amount {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+/* Карточка актива */
+.asset-card {
+  background: var(--card);
+  margin: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.asset-name {
+  font-weight: bold;
+}
+
+.asset-price {
+  font-size: 1.2rem;
+}
+
+.price-up {
+  color: var(--profit);
+}
+
+.price-down {
+  color: var(--loss);
+}
+
+/* Панель торговли */
+.trade-panel {
+  display: flex;
+  margin: 15px;
+  gap: 10px;
+}
+
+.trade-input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #334155;
+  color: white;
+}
+
+.trade-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.buy-btn {
+  background: var(--profit);
+  color: white;
+}
+
+.sell-btn {
+  background: var(--loss);
+  color: white;
+}
+
+/* История сделок */
+.history {
+  margin: 15px;
+}
+
+.history-item {
+  background: var(--card);
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.buy-sign {
+  color: var(--profit);
+}
+
+.sell-sign {
+  color: var(--loss);
+}
