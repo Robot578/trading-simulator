@@ -5,7 +5,8 @@ class TradingApp {
             portfolio: { BTC: 0, ETH: 0 },
             prices: { BTC: 50000, ETH: 3000 },
             history: [],
-            chart: null
+            chart: null,
+            candleSeries: null
         };
 
         this.init();
@@ -19,30 +20,42 @@ class TradingApp {
     }
 
     async initChart() {
-        const ctx = document.getElementById('priceChart').getContext('2d');
+        const chartContainer = document.getElementById('priceChart');
         const loader = document.getElementById('chartLoader');
         
         try {
-            const data = await this.fetchChartData();
-            
-            this.state.chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Цена',
-                        data: data.prices,
-                        borderColor: '#f7931a',
-                        backgroundColor: 'rgba(247, 147, 26, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
-                    }]
+            // Создаем график
+            this.state.chart = LightweightCharts.createChart(chartContainer, {
+                layout: {
+                    backgroundColor: '#1e293b',
+                    textColor: '#e2e8f0',
                 },
-                options: this.getChartOptions()
+                grid: {
+                    vertLines: { color: '#334155' },
+                    horzLines: { color: '#334155' },
+                },
+                width: chartContainer.clientWidth,
+                height: 250,
+                timeScale: {
+                    timeVisible: true,
+                    borderColor: '#334155',
+                },
             });
-            
+
+            // Добавляем свечную серию
+            this.state.candleSeries = this.state.chart.addCandlestickSeries({
+                upColor: '#10b981',
+                downColor: '#ef4444',
+                borderVisible: false,
+                wickUpColor: '#10b981',
+                wickDownColor: '#ef4444',
+            });
+
+            // Загружаем данные
+            const data = await this.fetchChartData();
+            this.state.candleSeries.setData(data);
             loader.style.display = 'none';
+
         } catch (error) {
             console.error("Ошибка инициализации графика:", error);
             loader.textContent = "Ошибка загрузки данных";
@@ -50,66 +63,59 @@ class TradingApp {
     }
 
     async fetchChartData() {
-        // Реальные данные с Binance API
         try {
-            const response = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=24');
+            const response = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=100');
             const data = await response.json();
             
-            return {
-                labels: data.map(item => new Date(item[0]).toLocaleTimeString()),
-                prices: data.map(item => parseFloat(item[4]))
-            };
+            return data.map(item => ({
+                time: item[0] / 1000, // Конвертируем в секунды
+                open: parseFloat(item[1]),
+                high: parseFloat(item[2]),
+                low: parseFloat(item[3]),
+                close: parseFloat(item[4]),
+            }));
         } catch (error) {
             console.log("Используем тестовые данные");
-            return this.getMockData();
+            return this.getMockCandleData();
         }
     }
 
-    getMockData() {
-        const now = new Date();
-        return {
-            labels: Array.from({length: 24}, (_, i) => {
-                const d = new Date(now);
-                d.setHours(d.getHours() - 24 + i);
-                return d.toLocaleTimeString();
-            }),
-            prices: Array.from({length: 24}, (_, i) => {
-                return 50000 * (1 + Math.sin(i/3) * 0.02 + (Math.random() - 0.5) * 0.01;
-            })
-        };
-    }
-
-    getChartOptions() {
-        return {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: ctx => `Цена: ${ctx.parsed.y.toFixed(2)} USDT`
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#94a3b8' }
-                },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#94a3b8' }
-                }
-            }
-        };
+    getMockCandleData() {
+        const now = Math.floor(Date.now() / 1000);
+        return Array.from({ length: 24 }, (_, i) => {
+            const basePrice = 50000;
+            const open = basePrice * (1 + Math.sin(i) * 0.01);
+            const close = basePrice * (1 + Math.sin(i + 1) * 0.01);
+            const high = Math.max(open, close) * (1 + Math.random() * 0.01);
+            const low = Math.min(open, close) * (1 - Math.random() * 0.01);
+            
+            return {
+                time: now - (24 - i) * 3600,
+                open,
+                high,
+                low,
+                close,
+            };
+        });
     }
 
     startPriceUpdates() {
         setInterval(() => {
             this.updatePrices();
             this.updateUI();
+            
+            // Обновляем последнюю свечу
+            if (this.state.candleSeries && this.state.candleSeries.data().length > 0) {
+                const lastCandle = this.state.candleSeries.data()[this.state.candleSeries.data().length - 1];
+                const newCandle = {
+                    time: Date.now() / 1000,
+                    open: lastCandle.close,
+                    high: this.state.prices.BTC * (1 + Math.random() * 0.01),
+                    low: this.state.prices.BTC * (1 - Math.random() * 0.01),
+                    close: this.state.prices.BTC,
+                };
+                this.state.candleSeries.update(newCandle);
+            }
         }, 3000);
     }
 
@@ -164,18 +170,11 @@ class TradingApp {
     }
 
     updateUI() {
-        // Обновление баланса
         document.getElementById('balance').textContent = this.state.balance.toFixed(2) + ' USDT';
-        
-        // Обновление цен
         const asset = document.getElementById('asset-select').value;
         document.getElementById('current-price').textContent = this.state.prices[asset].toFixed(2);
-        
-        // Обновление портфеля
         document.getElementById('btc-amount').textContent = this.state.portfolio.BTC.toFixed(6);
         document.getElementById('eth-amount').textContent = this.state.portfolio.ETH.toFixed(6);
-        
-        // Обновление истории
         this.updateHistory();
     }
 
