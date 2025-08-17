@@ -8,7 +8,9 @@ class TradingApp {
             history: [],
             chart: null,
             candleSeries: null,
-            currentInterval: '1h'
+            currentInterval: '1h',
+            ws: null,
+            apiRetryCount: 0
         };
 
         this.init();
@@ -17,6 +19,7 @@ class TradingApp {
     async init() {
         this.setupEventListeners();
         await this.initChart();
+        this.connectWebSocket();
         this.startPriceUpdates();
         this.updateUI();
     }
@@ -26,7 +29,6 @@ class TradingApp {
         const loader = document.getElementById('chartLoader');
         
         try {
-            // Очищаем контейнер
             chartContainer.innerHTML = '';
             loader.style.display = 'block';
             
@@ -35,22 +37,19 @@ class TradingApp {
                 layout: {
                     backgroundColor: '#1e293b',
                     textColor: '#e2e8f0',
-                    fontSize: 12,
+                    fontSize: 12
                 },
                 grid: {
                     vertLines: { color: 'rgba(51, 65, 85, 0.5)' },
-                    horzLines: { color: 'rgba(51, 65, 85, 0.5)' },
+                    horzLines: { color: 'rgba(51, 65, 85, 0.5)' }
                 },
                 width: chartContainer.clientWidth,
                 height: 300,
                 timeScale: {
                     timeVisible: true,
                     secondsVisible: false,
-                    borderColor: 'rgba(51, 65, 85, 0.8)',
-                },
-                crosshair: {
-                    mode: LightweightCharts.CrosshairMode.Normal,
-                },
+                    borderColor: 'rgba(51, 65, 85, 0.8)'
+                }
             });
 
             // Добавляем свечную серию
@@ -60,51 +59,131 @@ class TradingApp {
                 borderDownColor: '#ef4444',
                 borderUpColor: '#10b981',
                 wickDownColor: '#ef4444',
-                wickUpColor: '#10b981',
+                wickUpColor: '#10b981'
             });
 
-            // Загружаем данные
-            const data = await this.fetchChartData(this.state.currentInterval);
+            // Загружаем исторические данные
+            const data = await this.fetchChartData();
             this.state.candleSeries.setData(data);
-            
-            // Настраиваем zoom
             this.state.chart.timeScale().fitContent();
             
             loader.style.display = 'none';
 
         } catch (error) {
             console.error("Ошибка инициализации графика:", error);
-            loader.textContent = "Ошибка загрузки данных";
+            loader.textContent = "Ошибка загрузки. Используем тестовые данные...";
+            const mockData = this.getMockCandleData();
+            if (this.state.candleSeries) {
+                this.state.candleSeries.setData(mockData);
+                this.state.chart.timeScale().fitContent();
+            }
         }
     }
 
-    async fetchChartData(interval = '1h') {
+    async fetchChartData() {
         try {
-            const symbol = 'BTCUSDT';
-            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=100`);
+            // Пробуем разные прокси сервера если первый не работает
+            const proxies = [
+                'https://cors-anywhere.herokuapp.com/',
+                'https://api.codetabs.com/v1/proxy/?quest=',
+                'https://thingproxy.freeboard.io/fetch/'
+            ];
+            
+            const proxy = proxies[this.state.apiRetryCount % proxies.length];
+            const apiUrl = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${this.state.currentInterval}&limit=100`;
+            
+            const response = await fetch(proxy + apiUrl, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            
+            if (!response.ok) throw new Error("API не отвечает");
+            
             const data = await response.json();
             
             // Обновляем текущую цену
-            const lastCandle = data[data.length - 1];
-            this.state.prices.BTC = parseFloat(lastCandle[4]);
-            
-            // Рассчитываем изменение цены
-            const prevClose = parseFloat(data[data.length - 2][4]);
-            const currentClose = parseFloat(lastCandle[4]);
-            this.state.priceChange.BTC = ((currentClose - prevClose) / prevClose) * 100;
+            if (data.length > 0) {
+                const lastCandle = data[data.length - 1];
+                this.state.prices.BTC = parseFloat(lastCandle[4]);
+                
+                // Рассчитываем изменение цены
+                if (data.length > 1) {
+                    const prevClose = parseFloat(data[data.length - 2][4]);
+                    const currentClose = parseFloat(lastCandle[4]);
+                    this.state.priceChange.BTC = ((currentClose - prevClose) / prevClose) * 100;
+                }
+            }
             
             return data.map(item => ({
                 time: item[0] / 1000,
                 open: parseFloat(item[1]),
                 high: parseFloat(item[2]),
                 low: parseFloat(item[3]),
-                close: parseFloat(item[4]),
+                close: parseFloat(item[4])
             }));
             
         } catch (error) {
-            console.log("Используем тестовые данные");
-            return this.getMockCandleData();
+            console.log("Ошибка API:", error);
+            this.state.apiRetryCount++;
+            
+            if (this.state.apiRetryCount < 3) {
+                return this.fetchChartData(); // Пробуем еще раз
+            }
+            
+            throw error; // Переходим к мок данным
         }
+    }
+
+    connectWebSocket() {
+        if (this.state.ws) {
+            this.state.ws.close();
+        }
+        
+        const wsEndpoint = `wss://stream.binance.com:9443/ws/btcusdt@kline_${this.state.currentInterval}`;
+        this.state.ws = new WebSocket(wsEndpoint);
+        
+        this.state.ws.onopen = () => {
+            console.log("WebSocket подключен");
+        };
+        
+        this.state.ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (!data.k) return;
+                
+                const candle = data.k;
+                const newPrice = parseFloat(candle.c);
+                const priceChanged = newPrice !== this.state.prices.BTC;
+                
+                this.state.prices.BTC = newPrice;
+                
+                if (this.state.candleSeries) {
+                    this.state.candleSeries.update({
+                        time: candle.t / 1000,
+                        open: parseFloat(candle.o),
+                        high: parseFloat(candle.h),
+                        low: parseFloat(candle.l),
+                        close: newPrice
+                    });
+                }
+                
+                if (priceChanged) {
+                    this.updateUI();
+                }
+                
+            } catch (error) {
+                console.log("Ошибка обработки WebSocket сообщения:", error);
+            }
+        };
+        
+        this.state.ws.onerror = (error) => {
+            console.log("WebSocket ошибка:", error);
+            setTimeout(() => this.connectWebSocket(), 5000); // Переподключение через 5 сек
+        };
+        
+        this.state.ws.onclose = () => {
+            console.log("WebSocket закрыт, переподключаемся...");
+            setTimeout(() => this.connectWebSocket(), 5000);
+        };
     }
 
     getMockCandleData() {
@@ -121,7 +200,7 @@ class TradingApp {
                 open,
                 high,
                 low,
-                close,
+                close
             };
         });
     }
@@ -130,12 +209,16 @@ class TradingApp {
         if (!this.state.chart || !this.state.candleSeries) return;
         
         try {
+            this.state.currentInterval = interval;
             const loader = document.getElementById('chartLoader');
             loader.style.display = 'block';
             
-            const data = await this.fetchChartData(interval);
+            const data = await this.fetchChartData();
             this.state.candleSeries.setData(data);
             this.state.chart.timeScale().fitContent();
+            
+            // Переподключаем WebSocket с новым интервалом
+            this.connectWebSocket();
             
             loader.style.display = 'none';
         } catch (error) {
@@ -144,19 +227,13 @@ class TradingApp {
     }
 
     startPriceUpdates() {
-        // Обновляем данные каждые 30 секунд
-        setInterval(async () => {
-            await this.updateChartData(this.state.currentInterval);
+        // Обновляем данные каждые 30 секунд (как fallback если WebSocket отключится)
+        this.priceUpdateInterval = setInterval(async () => {
+            if (!this.state.ws || this.state.ws.readyState !== WebSocket.OPEN) {
+                await this.updateChartData(this.state.currentInterval);
+            }
             this.updateUI();
         }, 30000);
-    }
-
-    updatePrices() {
-        Object.keys(this.state.prices).forEach(asset => {
-            const change = (Math.random() * 0.02) - 0.01;
-            this.state.prices[asset] *= (1 + change);
-            this.state.priceChange[asset] = change * 100;
-        });
     }
 
     executeTrade(action, asset) {
@@ -212,13 +289,13 @@ class TradingApp {
         const changeElement = document.getElementById('price-change');
         
         priceElement.textContent = this.state.prices[asset].toFixed(2);
-        changeElement.textContent = this.state.priceChange[asset].toFixed(2) + '%';
         
         if (this.state.priceChange[asset] >= 0) {
             changeElement.style.color = 'var(--profit)';
-            changeElement.textContent = '+' + changeElement.textContent;
+            changeElement.textContent = '+' + this.state.priceChange[asset].toFixed(2) + '%';
         } else {
             changeElement.style.color = 'var(--loss)';
+            changeElement.textContent = this.state.priceChange[asset].toFixed(2) + '%';
         }
         
         // Обновляем портфель
@@ -281,8 +358,7 @@ class TradingApp {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                this.state.currentInterval = btn.dataset.interval;
-                this.updateChartData(this.state.currentInterval);
+                this.updateChartData(btn.dataset.interval);
             });
         });
     }
