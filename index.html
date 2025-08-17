@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдинг-симулятор с Binance</title>
+    <title>Трейдинг-симулятор</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js" defer></script>
@@ -11,10 +11,10 @@
 <body>
     <div class="app-container">
         <header class="header">
-            <h1>💰 Crypto Trader Pro (Binance)</h1>
+            <h1>💰 Crypto Trader Pro</h1>
             <div class="balance-card">
                 <h3>Баланс</h3>
-                <div class="balance-amount" id="balance">10000.00 USDT</div>
+                <div class="balance-amount" id="balance">10,000.00 USDT</div>
             </div>
         </header>
 
@@ -27,13 +27,14 @@
             <select id="asset-select" class="asset-select">
                 <option value="BTC">BTC/USDT</option>
                 <option value="ETH">ETH/USDT</option>
+                <option value="SOL">SOL/USDT</option>
             </select>
             <div class="asset-price" id="current-price">0.00</div>
             <div class="price-change" id="price-change">+0.00%</div>
         </div>
 
         <div class="trade-panel">
-            <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма USDT" value="100" min="1">
+            <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма USDT" value="100">
             <button id="buy-btn" class="trade-btn buy-btn">Купить</button>
             <button id="sell-btn" class="trade-btn sell-btn">Продать</button>
         </div>
@@ -48,6 +49,10 @@
                 <div class="portfolio-item">
                     <span>ETH:</span>
                     <span id="eth-amount">0.000000</span>
+                </div>
+                <div class="portfolio-item">
+                    <span>SOL:</span>
+                    <span id="sol-amount">0.000000</span>
                 </div>
             </div>
         </div>
