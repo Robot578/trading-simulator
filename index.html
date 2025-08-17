@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдинг-симулятор</title>
+    <title>Трейдинг-симулятор с Binance</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="script.js" defer></script>
 </head>
 <body>
     <div class="app-container">
         <header class="header">
-            <h1>💰 Трейдинг Симулятор</h1>
+            <h1>💰 Crypto Trader Pro (Binance)</h1>
             <div class="balance-card">
                 <h3>Баланс</h3>
                 <div class="balance-amount" id="balance">10000.00 USDT</div>
@@ -19,14 +20,8 @@
         </header>
 
         <div class="chart-container">
-            <div id="priceChart"></div>
-            <div class="chart-loader" id="chartLoader">Загрузка графика...</div>
-        </div>
-
-        <div class="timeframe-selector">
-            <button class="timeframe-btn active" data-interval="1h">1 час</button>
-            <button class="timeframe-btn" data-interval="4h">4 часа</button>
-            <button class="timeframe-btn" data-interval="1d">1 день</button>
+            <canvas id="priceChart"></canvas>
+            <div class="chart-loader" id="chartLoader">Загрузка данных...</div>
         </div>
 
         <div class="asset-selector">
@@ -34,14 +29,12 @@
                 <option value="BTC">BTC/USDT</option>
                 <option value="ETH">ETH/USDT</option>
             </select>
-            <div class="asset-info">
-                <div class="asset-price" id="current-price">50000.00</div>
-                <div class="price-change" id="price-change">+0.00%</div>
-            </div>
+            <div class="asset-price" id="current-price">0.00</div>
+            <div class="price-change" id="price-change">+0.00%</div>
         </div>
 
         <div class="trade-panel">
-            <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма USDT" value="100">
+            <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма USDT" value="100" min="1">
             <button id="buy-btn" class="trade-btn buy-btn">Купить</button>
             <button id="sell-btn" class="trade-btn sell-btn">Продать</button>
         </div>
