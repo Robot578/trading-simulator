@@ -4,11 +4,9 @@ class TradingApp {
             balance: 10000,
             portfolio: { BTC: 0, ETH: 0 },
             prices: { BTC: 0, ETH: 0 },
-            prevPrices: { BTC: 0, ETH: 0 },
             history: [],
             chart: null,
-            socket: null,
-            currentSymbol: 'BTCUSDT'
+            socket: null
         };
         this.init();
     }
@@ -21,30 +19,22 @@ class TradingApp {
         this.updateUI();
     }
 
-    async fetchWithProxy(url) {
-        try {
-            // Альтернативный прокси, если cors-anywhere не работает
-            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-            const response = await fetch(proxyUrl);
-            return await response.json();
-        } catch (error) {
-            console.error("Ошибка прокси:", error);
-            throw error;
-        }
-    }
-
     async loadPrices() {
         try {
-            const btcData = await this.fetchWithProxy('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-            const ethData = await this.fetchWithProxy('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
+            // Используем JSONBin.io как временное хранилище данных
+            const response = await fetch('https://api.jsonbin.io/v3/b/664f7dc1e41b4d34e4f3a1a4/latest', {
+                headers: {
+                    'X-Master-Key': '$2a$10$W9UXi6Sk.7q4Rl1Z5YzQ5O7vD3k9Jt8Yb1dLm6Nc4rX2vQ1Ks5Z7C'
+                }
+            });
+            const data = await response.json();
             
-            this.state.prices.BTC = parseFloat(btcData.price);
-            this.state.prices.ETH = parseFloat(ethData.price);
-            this.state.prevPrices = { ...this.state.prices };
+            this.state.prices.BTC = data.record.BTC;
+            this.state.prices.ETH = data.record.ETH;
         } catch (error) {
             console.error("Ошибка загрузки цен:", error);
             // Запасные значения
-            this.state.prices = { BTC: 50000, ETH: 3000 };
+            this.state.prices = { BTC: 68432.50, ETH: 3718.20 };
         }
     }
 
@@ -53,14 +43,16 @@ class TradingApp {
         const loader = document.getElementById('chartLoader');
         
         try {
-            const data = await this.fetchChartData();
+            // Данные графика из локального JSON
+            const response = await fetch('chart-data.json');
+            const data = await response.json();
             
             this.state.chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.labels,
                     datasets: [{
-                        label: `${this.state.currentSymbol} Цена`,
+                        label: 'BTC/USDT',
                         data: data.prices,
                         borderColor: '#f7931a',
                         backgroundColor: 'rgba(247, 147, 26, 0.1)',
@@ -78,10 +70,6 @@ class TradingApp {
                                 label: (ctx) => `Цена: ${ctx.parsed.y.toFixed(2)} USDT`
                             }
                         }
-                    },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: { grid: { color: 'rgba(255,255,255,0.1)' } }
                     }
                 }
             });
@@ -89,8 +77,7 @@ class TradingApp {
             loader.style.display = 'none';
         } catch (error) {
             console.error("Ошибка графика:", error);
-            loader.textContent = "Данные загружены (режим демо)";
-            // Запасные данные для демо
+            loader.textContent = "График загружен (демо-данные)";
             this.initDemoChart(ctx);
         }
     }
@@ -104,7 +91,7 @@ class TradingApp {
                 return d.toLocaleTimeString();
             }),
             prices: Array.from({ length: 24 }, (_, i) => 
-                50000 * (1 + Math.sin(i/3) * 0.02 + (Math.random() - 0.5) * 0.01)
+                60000 + Math.sin(i/2) * 2000 + (Math.random() * 1000)
         };
 
         this.state.chart = new Chart(ctx, {
@@ -112,7 +99,7 @@ class TradingApp {
             data: {
                 labels: demoData.labels,
                 datasets: [{
-                    label: `${this.state.currentSymbol} (демо)`,
+                    label: 'BTC/USDT (демо)',
                     data: demoData.prices,
                     borderColor: '#f7931a',
                     borderWidth: 2
@@ -121,58 +108,26 @@ class TradingApp {
         });
     }
 
-    async fetchChartData() {
-        try {
-            const data = await this.fetchWithProxy(
-                `https://api.binance.com/api/v3/klines?symbol=${this.state.currentSymbol}&interval=1h&limit=24`
-            );
-            return {
-                labels: data.map(item => new Date(item[0]).toLocaleTimeString()),
-                prices: data.map(item => parseFloat(item[4]))
-            };
-        } catch (error) {
-            throw new Error("Не удалось загрузить график");
-        }
-    }
-
     connectWebSocket() {
-        if (this.state.socket) this.state.socket.close();
-        
-        this.state.socket = new WebSocket(
-            `wss://stream.binance.com:9443/ws/${this.state.currentSymbol.toLowerCase()}@ticker`
-        );
-
-        this.state.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const asset = this.state.currentSymbol.includes('BTC') ? 'BTC' : 'ETH';
-            const newPrice = parseFloat(data.c);
-            
-            this.state.prevPrices[asset] = this.state.prices[asset];
-            this.state.prices[asset] = newPrice;
-            this.updatePriceChange();
+        // Эмуляция WebSocket через интервальное обновление
+        this.state.socket = setInterval(() => {
+            const change = (Math.random() * 0.02) - 0.01;
+            this.state.prices.BTC *= (1 + change);
+            this.state.prices.ETH *= (1 + change * 1.5);
             this.updateUI();
-        };
-    }
-
-    updatePriceChange() {
-        const asset = document.getElementById('asset-select').value;
-        const priceChangeElement = document.getElementById('price-change');
-        
-        if (this.state.prevPrices[asset] === 0) return;
-        
-        const change = ((this.state.prices[asset] - this.state.prevPrices[asset]) / this.state.prevPrices[asset]) * 100;
-        priceChangeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
-        priceChangeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+        }, 3000);
     }
 
     executeTrade(action, asset) {
         const amount = parseFloat(document.getElementById('trade-amount').value);
-        if (isNaN(amount) {
+        if (isNaN(amount)) {
             this.showAlert('Введите корректную сумму!');
             return;
         }
 
         const price = this.state.prices[asset];
+        let message = '';
+
         if (action === 'BUY') {
             const cost = amount;
             if (cost > this.state.balance) {
@@ -181,16 +136,16 @@ class TradingApp {
             }
             this.state.balance -= cost;
             this.state.portfolio[asset] += amount / price;
-            this.showAlert(`Куплено ${(amount / price).toFixed(6)} ${asset}`);
+            message = `Куплено ${(amount / price).toFixed(6)} ${asset}`;
         } else {
             const assetAmount = amount;
             if (assetAmount > this.state.portfolio[asset]) {
-                this.showAlert(`Недостаточно ${asset} для продажи!`);
+                this.showAlert(`Недостаточно ${asset}!`);
                 return;
             }
             this.state.balance += assetAmount * price;
             this.state.portfolio[asset] -= assetAmount;
-            this.showAlert(`Продано ${assetAmount.toFixed(6)} ${asset}`);
+            message = `Продано ${assetAmount.toFixed(6)} ${asset}`;
         }
 
         this.state.history.push({
@@ -201,20 +156,25 @@ class TradingApp {
             timestamp: new Date().toLocaleString()
         });
         this.updateUI();
+        this.showAlert(message);
     }
 
     updateUI() {
         document.getElementById('balance').textContent = this.state.balance.toFixed(2) + ' USDT';
+        
         const asset = document.getElementById('asset-select').value;
         document.getElementById('current-price').textContent = this.state.prices[asset].toFixed(2);
+        
         document.getElementById('btc-amount').textContent = this.state.portfolio.BTC.toFixed(6);
         document.getElementById('eth-amount').textContent = this.state.portfolio.ETH.toFixed(6);
+        
         this.updateHistory();
     }
 
     updateHistory() {
         const container = document.getElementById('history-items');
         container.innerHTML = '';
+        
         this.state.history.slice().reverse().forEach(trade => {
             const item = document.createElement('div');
             item.className = `history-item ${trade.type.toLowerCase()}`;
@@ -224,7 +184,7 @@ class TradingApp {
                     <span>${trade.type === 'BUY' 
                         ? `${(trade.amount / trade.price).toFixed(6)} ${trade.asset}` 
                         : `${trade.amount.toFixed(6)} ${trade.asset}`} 
-                    по ${trade.price.toFixed(2)}</span>
+                    по ${trade.price.toFixed(2)} USDT</span>
                 </div>
                 <div class="trade-time">${trade.timestamp}</div>
             `;
@@ -249,13 +209,6 @@ class TradingApp {
         document.getElementById('sell-btn').addEventListener('click', () => {
             const asset = document.getElementById('asset-select').value;
             this.executeTrade('SELL', asset);
-        });
-        
-        document.getElementById('asset-select').addEventListener('change', () => {
-            this.state.currentSymbol = `${document.getElementById('asset-select').value}USDT`;
-            this.state.chart.destroy();
-            this.initChart();
-            this.connectWebSocket();
         });
     }
 }
