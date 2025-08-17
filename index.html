@@ -3,23 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдинг-симулятор</title>
+    <title>Crypto Trading Simulator Pro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/technicalindicators/dist/technicalindicators.min.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body>
     <div class="app-container">
         <header class="header">
-            <h1>💰 Crypto Trader Pro</h1>
+            <h1>📊 Crypto Trading Pro</h1>
             <div class="balance-card">
                 <h3>Баланс</h3>
                 <div class="balance-amount" id="balance">10,000.00 USDT</div>
             </div>
         </header>
 
+        <div class="chart-controls">
+            <select id="timeframe-select" class="timeframe-select">
+                <option value="1m">1 минута</option>
+                <option value="15m">15 минут</option>
+                <option value="1h" selected>1 час</option>
+                <option value="4h">4 часа</option>
+                <option value="1d">1 день</option>
+            </select>
+            <div class="indicator-toggle">
+                <label><input type="checkbox" id="sma-toggle" checked> SMA</label>
+                <label><input type="checkbox" id="rsi-toggle"> RSI</label>
+            </div>
+        </div>
+
         <div class="chart-container">
-            <canvas id="priceChart"></canvas>
+            <div id="candleChart"></div>
+            <div id="volumeChart"></div>
+            <div id="rsiChart" class="indicator-chart"></div>
             <div class="chart-loader" id="chartLoader">Загрузка данных...</div>
         </div>
 
@@ -28,38 +45,34 @@
                 <option value="BTC">BTC/USDT</option>
                 <option value="ETH">ETH/USDT</option>
                 <option value="SOL">SOL/USDT</option>
+                <option value="ADA">ADA/USDT</option>
             </select>
-            <div class="asset-price" id="current-price">0.00</div>
-            <div class="price-change" id="price-change">+0.00%</div>
+            <div class="price-display">
+                <div class="asset-price" id="current-price">0.00</div>
+                <div class="price-change" id="price-change">+0.00%</div>
+            </div>
         </div>
 
         <div class="trade-panel">
             <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма USDT" value="100">
-            <button id="buy-btn" class="trade-btn buy-btn">Купить</button>
-            <button id="sell-btn" class="trade-btn sell-btn">Продать</button>
-        </div>
-
-        <div class="portfolio-section">
-            <h3>Ваш портфель</h3>
-            <div id="portfolio-items">
-                <div class="portfolio-item">
-                    <span>BTC:</span>
-                    <span id="btc-amount">0.000000</span>
-                </div>
-                <div class="portfolio-item">
-                    <span>ETH:</span>
-                    <span id="eth-amount">0.000000</span>
-                </div>
-                <div class="portfolio-item">
-                    <span>SOL:</span>
-                    <span id="sol-amount">0.000000</span>
-                </div>
+            <div class="trade-buttons">
+                <button id="buy-btn" class="trade-btn buy-btn">Купить</button>
+                <button id="sell-btn" class="trade-btn sell-btn">Продать</button>
             </div>
         </div>
 
-        <div class="history">
-            <h3>История сделок</h3>
-            <div id="history-items"></div>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="portfolio">Портфель</button>
+            <button class="tab-btn" data-tab="history">История</button>
+            <button class="tab-btn" data-tab="orders">Ордера</button>
+        </div>
+
+        <div class="tab-content active" id="portfolio-tab">
+            <!-- Портфель будет здесь -->
+        </div>
+
+        <div class="tab-content" id="history-tab">
+            <!-- История будет здесь -->
         </div>
     </div>
 </body>
