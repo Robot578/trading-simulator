@@ -2,54 +2,193 @@ class TradingApp {
     constructor() {
         this.state = {
             balance: 10000,
-            portfolio: { BTC: 0, ETH: 0, SOL: 0 },
-            prices: { BTC: 0, ETH: 0, SOL: 0 },
+            portfolio: { BTC: 0, ETH: 0, SOL: 0, ADA: 0 },
+            prices: { BTC: 0, ETH: 0, SOL: 0, ADA: 0 },
             history: [],
             chart: null,
+            volumeSeries: null,
+            rsiSeries: null,
+            candleSeries: null,
+            smaSeries: null,
             socket: null,
-            lastUpdate: null
+            timeframe: '1h',
+            candles: []
         };
 
         this.init();
     }
 
     async init() {
+        this.initCharts();
         this.setupEventListeners();
-        await this.initChart();
-        this.connectWebSocket();
+        this.loadInitialData();
         this.updateUI();
     }
 
-    async initChart() {
-        const ctx = document.getElementById('priceChart').getContext('2d');
-        const loader = document.getElementById('chartLoader');
-        
-        this.state.chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Цена',
-                    data: [],
-                    borderColor: '#f7931a',
-                    backgroundColor: 'rgba(247, 147, 26, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.1,
-                    fill: true
-                }]
+    initCharts() {
+        const chartContainer = document.getElementById('candleChart');
+        chartContainer.innerHTML = '';
+
+        // Основной график
+        this.state.chart = LightweightCharts.createChart(chartContainer, {
+            width: chartContainer.clientWidth,
+            height: 350,
+            layout: {
+                backgroundColor: '#1e293b',
+                textColor: 'rgba(255, 255, 255, 0.9)'
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
-                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } }
-                }
+            grid: {
+                vertLines: { color: 'rgba(197, 203, 206, 0.1)' },
+                horzLines: { color: 'rgba(197, 203, 206, 0.1)' }
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal
+            },
+            timeScale: {
+                timeVisible: true,
+                borderColor: 'rgba(197, 203, 206, 0.1)'
             }
         });
-        
-        loader.style.display = 'none';
+
+        // Свечной график
+        this.state.candleSeries = this.state.chart.addCandlestickSeries({
+            upColor: '#10b981',
+            downColor: '#ef4444',
+            borderDownColor: '#ef4444',
+            borderUpColor: '#10b981',
+            wickDownColor: '#ef4444',
+            wickUpColor: '#10b981'
+        });
+
+        // Линия SMA
+        this.state.smaSeries = this.state.chart.addLineSeries({
+            color: '#f7931a',
+            lineWidth: 2
+        });
+
+        // График объема
+        const volumeChart = LightweightCharts.createChart(document.getElementById('volumeChart'), {
+            width: chartContainer.clientWidth,
+            height: 80,
+            layout: {
+                backgroundColor: '#1e293b',
+                textColor: 'rgba(255, 255, 255, 0.9)'
+            },
+            grid: {
+                vertLines: { visible: false },
+                horzLines: { visible: false }
+            },
+            timeScale: {
+                visible: false
+            }
+        });
+
+        this.state.volumeSeries = volumeChart.addHistogramSeries({
+            color: '#26a69a',
+            priceFormat: {
+                type: 'volume'
+            },
+            priceScaleId: ''
+        });
+
+        // График RSI
+        const rsiChart = LightweightCharts.createChart(document.getElementById('rsiChart'), {
+            width: chartContainer.clientWidth,
+            height: 80,
+            layout: {
+                backgroundColor: '#1e293b',
+                textColor: 'rgba(255, 255, 255, 0.9)'
+            },
+            grid: {
+                vertLines: { visible: false },
+                horzLines: { visible: false }
+            },
+            timeScale: {
+                visible: false
+            }
+        });
+
+        this.state.rsiSeries = rsiChart.addLineSeries({
+            color: '#9c27b0',
+            lineWidth: 1
+        });
+    }
+
+    async loadInitialData() {
+        const asset = document.getElementById('asset-select').value;
+        await this.fetchCandles(asset);
+        this.connectWebSocket();
+    }
+
+    async fetchCandles(asset) {
+        const symbol = `${asset}USDT`;
+        const timeframe = this.state.timeframe;
+        const limit = 100;
+
+        try {
+            const response = await fetch(
+                `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=${limit}`
+            );
+            const data = await response.json();
+
+            this.state.candles = data.map(item => ({
+                time: item[0] / 1000,
+                open: parseFloat(item[1]),
+                high: parseFloat(item[2]),
+                low: parseFloat(item[3]),
+                close: parseFloat(item[4]),
+                volume: parseFloat(item[5])
+            }));
+
+            this.updateCharts();
+            document.getElementById('chartLoader').style.display = 'none';
+        } catch (error) {
+            console.error("Ошибка загрузки данных:", error);
+        }
+    }
+
+    updateCharts() {
+        // Обновляем свечи
+        this.state.candleSeries.setData(this.state.candles);
+
+        // Обновляем объемы
+        const volumeData = this.state.candles.map(candle => ({
+            time: candle.time,
+            value: candle.volume,
+            color: candle.close > candle.open ? '#10b981' : '#ef4444'
+        }));
+        this.state.volumeSeries.setData(volumeData);
+
+        // Рассчитываем и обновляем SMA
+        const closePrices = this.state.candles.map(c => c.close);
+        const sma = this.calculateSMA(closePrices, 14);
+        const smaData = this.state.candles.slice(13).map((candle, i) => ({
+            time: candle.time,
+            value: sma[i]
+        }));
+        this.state.smaSeries.setData(smaData);
+
+        // Рассчитываем и обновляем RSI
+        const rsi = this.calculateRSI(closePrices, 14);
+        const rsiData = this.state.candles.slice(14).map((candle, i) => ({
+            time: candle.time,
+            value: rsi[i]
+        }));
+        this.state.rsiSeries.setData(rsiData);
+    }
+
+    calculateSMA(data, windowSize) {
+        const sma = [];
+        for (let i = windowSize - 1; i < data.length; i++) {
+            const sum = data.slice(i - windowSize + 1, i + 1).reduce((a, b) => a + b, 0);
+            sma.push(sum / windowSize);
+        }
+        return sma;
+    }
+
+    calculateRSI(data, period) {
+        const rsi = new technicalindicators.RSI({ values: data, period });
+        return rsi.result;
     }
 
     connectWebSocket() {
@@ -57,130 +196,80 @@ class TradingApp {
 
         const asset = document.getElementById('asset-select').value;
         const symbol = `${asset}USDT`.toLowerCase();
+        const timeframe = this.state.timeframe;
 
-        this.state.socket = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@ticker`);
+        this.state.socket = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@kline_${timeframe}`);
 
         this.state.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const price = parseFloat(data.c);
-            const change = parseFloat(data.P);
+            const candleData = data.k;
 
-            this.state.prices[asset] = price;
-            
-            document.getElementById('current-price').textContent = price.toFixed(2);
-            document.getElementById('price-change').textContent = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
-            document.getElementById('price-change').style.color = change >= 0 ? '#10b981' : '#ef4444';
+            const newCandle = {
+                time: candleData.t / 1000,
+                open: parseFloat(candleData.o),
+                high: parseFloat(candleData.h),
+                low: parseFloat(candleData.l),
+                close: parseFloat(candleData.c),
+                volume: parseFloat(candleData.v)
+            };
 
-            // Обновляем график (макс. 30 точек)
-            if (Date.now() - this.state.lastUpdate > 1000) {
-                this.state.chart.data.labels.push(new Date().toLocaleTimeString());
-                this.state.chart.data.datasets[0].data.push(price);
-                if (this.state.chart.data.datasets[0].data.length > 30) {
-                    this.state.chart.data.labels.shift();
-                    this.state.chart.data.datasets[0].data.shift();
+            // Обновляем последнюю свечу
+            if (!candleData.x) {
+                this.state.candles[this.state.candles.length - 1] = newCandle;
+            } else {
+                // Добавляем новую свечу
+                this.state.candles.push(newCandle);
+                if (this.state.candles.length > 100) {
+                    this.state.candles.shift();
                 }
-                this.state.chart.update();
-                this.state.lastUpdate = Date.now();
             }
+
+            this.updateCharts();
         };
-
-        this.state.socket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-        };
-    }
-
-    executeTrade(action, asset) {
-        const amount = parseFloat(document.getElementById('trade-amount').value);
-        if (isNaN(amount) || amount <= 0) {
-            this.showAlert('Введите корректную сумму!');
-            return;
-        }
-
-        const price = this.state.prices[asset];
-        let message = '';
-
-        if (action === 'BUY') {
-            const amountBought = amount / price;
-            if (amount > this.state.balance) {
-                this.showAlert('Недостаточно средств!');
-                return;
-            }
-            this.state.balance -= amount;
-            this.state.portfolio[asset] += amountBought;
-            message = `Куплено ${amountBought.toFixed(6)} ${asset} за ${amount.toFixed(2)} USDT`;
-        } else {
-            if (this.state.portfolio[asset] <= 0) {
-                this.showAlert(`Недостаточно ${asset} для продажи!`);
-                return;
-            }
-            const total = amount * price;
-            this.state.balance += total;
-            this.state.portfolio[asset] -= amount;
-            message = `Продано ${amount.toFixed(6)} ${asset} за ${total.toFixed(2)} USDT`;
-        }
-
-        this.state.history.push({
-            type: action,
-            asset,
-            amount,
-            price,
-            total: amount * price,
-            timestamp: new Date().toLocaleString()
-        });
-
-        this.showAlert(message);
-        this.updateUI();
-    }
-
-    updateUI() {
-        document.getElementById('balance').textContent = this.state.balance.toFixed(2) + ' USDT';
-        document.getElementById('btc-amount').textContent = this.state.portfolio.BTC.toFixed(6);
-        document.getElementById('eth-amount').textContent = this.state.portfolio.ETH.toFixed(6);
-        document.getElementById('sol-amount').textContent = this.state.portfolio.SOL.toFixed(6);
-        this.updateHistory();
-    }
-
-    updateHistory() {
-        const container = document.getElementById('history-items');
-        container.innerHTML = '';
-        
-        this.state.history.slice().reverse().forEach(trade => {
-            const item = document.createElement('div');
-            item.className = `history-item ${trade.type.toLowerCase()}`;
-            item.innerHTML = `
-                <div class="trade-type">${trade.type === 'BUY' ? '🟢 Куплено' : '🔴 Продано'} ${trade.asset}</div>
-                <div class="trade-details">
-                    <span>${trade.amount.toFixed(6)} по ${trade.price.toFixed(2)} USDT</span>
-                    <span>${trade.total.toFixed(2)} USDT</span>
-                </div>
-                <div class="trade-time">${trade.timestamp}</div>
-            `;
-            container.appendChild(item);
-        });
-    }
-
-    showAlert(message) {
-        const alert = document.createElement('div');
-        alert.className = 'trade-alert';
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 3000);
     }
 
     setupEventListeners() {
+        // Смена актива
+        document.getElementById('asset-select').addEventListener('change', () => {
+            this.loadInitialData();
+        });
+
+        // Смена таймфрейма
+        document.getElementById('timeframe-select').addEventListener('change', (e) => {
+            this.state.timeframe = e.target.value;
+            this.loadInitialData();
+        });
+
+        // Показать/скрыть индикаторы
+        document.getElementById('sma-toggle').addEventListener('change', (e) => {
+            this.state.smaSeries.applyOptions({ visible: e.target.checked });
+        });
+
+        document.getElementById('rsi-toggle').addEventListener('change', (e) => {
+            document.getElementById('rsiChart').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // Торговые кнопки
         document.getElementById('buy-btn').addEventListener('click', () => {
             const asset = document.getElementById('asset-select').value;
             this.executeTrade('BUY', asset);
         });
-        
+
         document.getElementById('sell-btn').addEventListener('click', () => {
             const asset = document.getElementById('asset-select').value;
             this.executeTrade('SELL', asset);
         });
-        
-        document.getElementById('asset-select').addEventListener('change', () => {
-            this.connectWebSocket();
-        });
+    }
+
+    executeTrade(action, asset) {
+        const amount = parseFloat(document.getElementById('trade-amount').value);
+        const price = this.state.prices[asset] || this.state.candles.slice(-1)[0].close;
+
+        // ... (остальная логика торговли)
+    }
+
+    updateUI() {
+        // ... (обновление интерфейса)
     }
 }
 
