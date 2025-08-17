@@ -6,7 +6,6 @@
     --card: #1e293b;
     --text: #e2e8f0;
     --border: #334155;
-    --highlight: #3b82f6;
 }
 
 * {
@@ -20,24 +19,17 @@ body {
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
-    padding: 0;
-    margin: 0;
+    padding: 20px;
 }
 
 .app-container {
-    max-width: 100%;
-    min-height: 100vh;
-    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .header {
     text-align: center;
     margin-bottom: 20px;
-}
-
-.header h1 {
-    color: var(--highlight);
-    margin-bottom: 10px;
 }
 
 .balance-card {
@@ -47,25 +39,13 @@ body {
     margin: 10px 0;
 }
 
-.balance-amount {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--highlight);
-}
-
 .chart-container {
     position: relative;
-    width: 100%;
     height: 300px;
     background: var(--card);
     border-radius: 12px;
     margin: 15px 0;
     padding: 10px;
-}
-
-#priceChart {
-    width: 100%;
-    height: 100%;
 }
 
 .chart-loader {
@@ -74,28 +54,6 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     color: var(--text);
-}
-
-.timeframe-selector {
-    display: flex;
-    gap: 8px;
-    margin: 10px 0;
-}
-
-.timeframe-btn {
-    flex: 1;
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    background: var(--card);
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.timeframe-btn.active {
-    background: var(--highlight);
-    color: white;
 }
 
 .asset-selector {
@@ -113,12 +71,7 @@ body {
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 8px 12px;
-    margin-right: 10px;
-}
-
-.asset-info {
-    text-align: right;
+    padding: 8px;
 }
 
 .asset-price {
@@ -126,9 +79,12 @@ body {
     font-weight: bold;
 }
 
-.price-change {
-    font-size: 0.9rem;
+.price-change.positive {
     color: var(--profit);
+}
+
+.price-change.negative {
+    color: var(--loss);
 }
 
 .trade-panel {
@@ -152,11 +108,6 @@ body {
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.trade-btn:hover {
-    opacity: 0.9;
 }
 
 .buy-btn {
@@ -180,8 +131,6 @@ body {
     display: flex;
     justify-content: space-between;
     margin: 10px 0;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
 }
 
 .history-item {
@@ -189,11 +138,6 @@ body {
     border-radius: 8px;
     padding: 12px;
     margin: 10px 0;
-    transition: transform 0.2s;
-}
-
-.history-item:hover {
-    transform: translateX(5px);
 }
 
 .history-item.buy {
@@ -204,26 +148,6 @@ body {
     border-left: 4px solid var(--loss);
 }
 
-.trade-type {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.trade-details {
-    display: flex;
-    justify-content: space-between;
-    color: var(--text);
-    opacity: 0.8;
-    font-size: 0.9rem;
-}
-
-.trade-time {
-    font-size: 0.8rem;
-    color: var(--text);
-    opacity: 0.6;
-    margin-top: 5px;
-}
-
 .trade-alert {
     position: fixed;
     bottom: 20px;
@@ -232,34 +156,6 @@ body {
     background: var(--card);
     padding: 12px 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     z-index: 1000;
-    animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-@media (max-width: 480px) {
-    .trade-panel {
-        flex-direction: column;
-    }
-    
-    .trade-btn {
-        width: 100%;
-    }
-    
-    .chart-container {
-        height: 250px;
-    }
-    
-    .timeframe-selector {
-        flex-wrap: wrap;
-    }
-    
-    .timeframe-btn {
-        min-width: calc(33% - 6px);
-    }
 }
