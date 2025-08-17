@@ -2,10 +2,12 @@ class TradingApp {
     constructor() {
         this.state = {
             balance: 10000,
-            portfolio: { BTC: 0, ETH: 0 },
-            prices: { BTC: 50000, ETH: 3000 },
+            portfolio: { BTC: 0, ETH: 0, SOL: 0 },
+            prices: { BTC: 0, ETH: 0, SOL: 0 },
             history: [],
-            chart: null
+            chart: null,
+            socket: null,
+            lastUpdate: null
         };
 
         this.init();
@@ -14,7 +16,7 @@ class TradingApp {
     async init() {
         this.setupEventListeners();
         await this.initChart();
-        this.startPriceUpdates();
+        this.connectWebSocket();
         this.updateUI();
     }
 
@@ -22,102 +24,69 @@ class TradingApp {
         const ctx = document.getElementById('priceChart').getContext('2d');
         const loader = document.getElementById('chartLoader');
         
-        try {
-            const data = await this.fetchChartData();
-            
-            this.state.chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Цена',
-                        data: data.prices,
-                        borderColor: '#f7931a',
-                        backgroundColor: 'rgba(247, 147, 26, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
-                    }]
-                },
-                options: this.getChartOptions()
-            });
-            
-            loader.style.display = 'none';
-        } catch (error) {
-            console.error("Ошибка инициализации графика:", error);
-            loader.textContent = "Ошибка загрузки данных";
-        }
-    }
-
-    async fetchChartData() {
-        // Реальные данные с Binance API
-        try {
-            const response = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=24');
-            const data = await response.json();
-            
-            return {
-                labels: data.map(item => new Date(item[0]).toLocaleTimeString()),
-                prices: data.map(item => parseFloat(item[4]))
-            };
-        } catch (error) {
-            console.log("Используем тестовые данные");
-            return this.getMockData();
-        }
-    }
-
-    getMockData() {
-        const now = new Date();
-        return {
-            labels: Array.from({length: 24}, (_, i) => {
-                const d = new Date(now);
-                d.setHours(d.getHours() - 24 + i);
-                return d.toLocaleTimeString();
-            }),
-            prices: Array.from({length: 24}, (_, i) => {
-                return 50000 * (1 + Math.sin(i/3) * 0.02 + (Math.random() - 0.5) * 0.01;
-            })
-        };
-    }
-
-    getChartOptions() {
-        return {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: ctx => `Цена: ${ctx.parsed.y.toFixed(2)} USDT`
-                    }
-                }
+        this.state.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Цена',
+                    data: [],
+                    borderColor: '#f7931a',
+                    backgroundColor: 'rgba(247, 147, 26, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    fill: true
+                }]
             },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#94a3b8' }
-                },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#94a3b8' }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } }
                 }
             }
-        };
-    }
-
-    startPriceUpdates() {
-        setInterval(() => {
-            this.updatePrices();
-            this.updateUI();
-        }, 3000);
-    }
-
-    updatePrices() {
-        Object.keys(this.state.prices).forEach(asset => {
-            const change = (Math.random() * 0.02) - 0.01;
-            this.state.prices[asset] *= (1 + change);
         });
+        
+        loader.style.display = 'none';
+    }
+
+    connectWebSocket() {
+        if (this.state.socket) this.state.socket.close();
+
+        const asset = document.getElementById('asset-select').value;
+        const symbol = `${asset}USDT`.toLowerCase();
+
+        this.state.socket = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@ticker`);
+
+        this.state.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const price = parseFloat(data.c);
+            const change = parseFloat(data.P);
+
+            this.state.prices[asset] = price;
+            
+            document.getElementById('current-price').textContent = price.toFixed(2);
+            document.getElementById('price-change').textContent = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
+            document.getElementById('price-change').style.color = change >= 0 ? '#10b981' : '#ef4444';
+
+            // Обновляем график (макс. 30 точек)
+            if (Date.now() - this.state.lastUpdate > 1000) {
+                this.state.chart.data.labels.push(new Date().toLocaleTimeString());
+                this.state.chart.data.datasets[0].data.push(price);
+                if (this.state.chart.data.datasets[0].data.length > 30) {
+                    this.state.chart.data.labels.shift();
+                    this.state.chart.data.datasets[0].data.shift();
+                }
+                this.state.chart.update();
+                this.state.lastUpdate = Date.now();
+            }
+        };
+
+        this.state.socket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
     }
 
     executeTrade(action, asset) {
@@ -140,7 +109,7 @@ class TradingApp {
             this.state.portfolio[asset] += amountBought;
             message = `Куплено ${amountBought.toFixed(6)} ${asset} за ${amount.toFixed(2)} USDT`;
         } else {
-            if (this.state.portfolio[asset] < amount) {
+            if (this.state.portfolio[asset] <= 0) {
                 this.showAlert(`Недостаточно ${asset} для продажи!`);
                 return;
             }
@@ -164,18 +133,10 @@ class TradingApp {
     }
 
     updateUI() {
-        // Обновление баланса
         document.getElementById('balance').textContent = this.state.balance.toFixed(2) + ' USDT';
-        
-        // Обновление цен
-        const asset = document.getElementById('asset-select').value;
-        document.getElementById('current-price').textContent = this.state.prices[asset].toFixed(2);
-        
-        // Обновление портфеля
         document.getElementById('btc-amount').textContent = this.state.portfolio.BTC.toFixed(6);
         document.getElementById('eth-amount').textContent = this.state.portfolio.ETH.toFixed(6);
-        
-        // Обновление истории
+        document.getElementById('sol-amount').textContent = this.state.portfolio.SOL.toFixed(6);
         this.updateHistory();
     }
 
@@ -189,7 +150,7 @@ class TradingApp {
             item.innerHTML = `
                 <div class="trade-type">${trade.type === 'BUY' ? '🟢 Куплено' : '🔴 Продано'} ${trade.asset}</div>
                 <div class="trade-details">
-                    <span>${trade.amount.toFixed(6)} по ${trade.price.toFixed(2)}</span>
+                    <span>${trade.amount.toFixed(6)} по ${trade.price.toFixed(2)} USDT</span>
                     <span>${trade.total.toFixed(2)} USDT</span>
                 </div>
                 <div class="trade-time">${trade.timestamp}</div>
@@ -203,10 +164,7 @@ class TradingApp {
         alert.className = 'trade-alert';
         alert.textContent = message;
         document.body.appendChild(alert);
-        
-        setTimeout(() => {
-            alert.remove();
-        }, 3000);
+        setTimeout(() => alert.remove(), 3000);
     }
 
     setupEventListeners() {
@@ -221,12 +179,9 @@ class TradingApp {
         });
         
         document.getElementById('asset-select').addEventListener('change', () => {
-            this.updateUI();
+            this.connectWebSocket();
         });
     }
 }
 
-// Запуск приложения
-document.addEventListener('DOMContentLoaded', () => {
-    new TradingApp();
-});
+document.addEventListener('DOMContentLoaded', () => new TradingApp());
