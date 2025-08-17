@@ -3,14 +3,12 @@ class TradingApp {
         this.state = {
             balance: 10000,
             portfolio: { BTC: 0, ETH: 0 },
-            prices: { BTC: 50000, ETH: 3000 },
-            priceChange: { BTC: 0, ETH: 0 },
+            prices: { BTC: 0, ETH: 0 },
+            prevPrices: { BTC: 0, ETH: 0 },
             history: [],
             chart: null,
-            candleSeries: null,
-            currentInterval: '1h',
-            ws: null,
-            apiRetryCount: 0
+            socket: null,
+            currentSymbol: 'BTCUSDT'
         };
 
         this.init();
@@ -18,222 +16,119 @@ class TradingApp {
 
     async init() {
         this.setupEventListeners();
+        await this.loadPrices();
         await this.initChart();
         this.connectWebSocket();
-        this.startPriceUpdates();
         this.updateUI();
     }
 
+    async loadPrices() {
+        try {
+            const btcResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+            const ethResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT');
+            
+            const btcData = await btcResponse.json();
+            const ethData = await ethResponse.json();
+            
+            this.state.prices.BTC = parseFloat(btcData.price);
+            this.state.prices.ETH = parseFloat(ethData.price);
+        } catch (error) {
+            console.error("Ошибка загрузки цен:", error);
+        }
+    }
+
     async initChart() {
-        const chartContainer = document.getElementById('priceChart');
+        const ctx = document.getElementById('priceChart').getContext('2d');
         const loader = document.getElementById('chartLoader');
         
         try {
-            chartContainer.innerHTML = '';
-            loader.style.display = 'block';
-            
-            // Создаем график
-            this.state.chart = LightweightCharts.createChart(chartContainer, {
-                layout: {
-                    backgroundColor: '#1e293b',
-                    textColor: '#e2e8f0',
-                    fontSize: 12
-                },
-                grid: {
-                    vertLines: { color: 'rgba(51, 65, 85, 0.5)' },
-                    horzLines: { color: 'rgba(51, 65, 85, 0.5)' }
-                },
-                width: chartContainer.clientWidth,
-                height: 300,
-                timeScale: {
-                    timeVisible: true,
-                    secondsVisible: false,
-                    borderColor: 'rgba(51, 65, 85, 0.8)'
-                }
-            });
-
-            // Добавляем свечную серию
-            this.state.candleSeries = this.state.chart.addCandlestickSeries({
-                upColor: '#10b981',
-                downColor: '#ef4444',
-                borderDownColor: '#ef4444',
-                borderUpColor: '#10b981',
-                wickDownColor: '#ef4444',
-                wickUpColor: '#10b981'
-            });
-
-            // Загружаем исторические данные
             const data = await this.fetchChartData();
-            this.state.candleSeries.setData(data);
-            this.state.chart.timeScale().fitContent();
+            
+            this.state.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: `${this.state.currentSymbol} Цена`,
+                        data: data.prices,
+                        borderColor: '#f7931a',
+                        backgroundColor: 'rgba(247, 147, 26, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: this.getChartOptions()
+            });
             
             loader.style.display = 'none';
-
         } catch (error) {
-            console.error("Ошибка инициализации графика:", error);
-            loader.textContent = "Ошибка загрузки. Используем тестовые данные...";
-            const mockData = this.getMockCandleData();
-            if (this.state.candleSeries) {
-                this.state.candleSeries.setData(mockData);
-                this.state.chart.timeScale().fitContent();
-            }
+            console.error("Ошибка графика:", error);
+            loader.textContent = "Ошибка загрузки данных";
         }
     }
 
     async fetchChartData() {
         try {
-            // Пробуем разные прокси сервера если первый не работает
-            const proxies = [
-                'https://cors-anywhere.herokuapp.com/',
-                'https://api.codetabs.com/v1/proxy/?quest=',
-                'https://thingproxy.freeboard.io/fetch/'
-            ];
-            
-            const proxy = proxies[this.state.apiRetryCount % proxies.length];
-            const apiUrl = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${this.state.currentInterval}&limit=100`;
-            
-            const response = await fetch(proxy + apiUrl, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            
-            if (!response.ok) throw new Error("API не отвечает");
-            
+            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${this.state.currentSymbol}&interval=1h&limit=24`);
             const data = await response.json();
             
-            // Обновляем текущую цену
-            if (data.length > 0) {
-                const lastCandle = data[data.length - 1];
-                this.state.prices.BTC = parseFloat(lastCandle[4]);
-                
-                // Рассчитываем изменение цены
-                if (data.length > 1) {
-                    const prevClose = parseFloat(data[data.length - 2][4]);
-                    const currentClose = parseFloat(lastCandle[4]);
-                    this.state.priceChange.BTC = ((currentClose - prevClose) / prevClose) * 100;
-                }
-            }
-            
-            return data.map(item => ({
-                time: item[0] / 1000,
-                open: parseFloat(item[1]),
-                high: parseFloat(item[2]),
-                low: parseFloat(item[3]),
-                close: parseFloat(item[4])
-            }));
-            
+            return {
+                labels: data.map(item => new Date(item[0]).toLocaleTimeString()),
+                prices: data.map(item => parseFloat(item[4]))
+            };
         } catch (error) {
-            console.log("Ошибка API:", error);
-            this.state.apiRetryCount++;
-            
-            if (this.state.apiRetryCount < 3) {
-                return this.fetchChartData(); // Пробуем еще раз
-            }
-            
-            throw error; // Переходим к мок данным
+            throw new Error("Не удалось загрузить данные");
         }
     }
 
     connectWebSocket() {
-        if (this.state.ws) {
-            this.state.ws.close();
+        if (this.state.socket) {
+            this.state.socket.close();
         }
         
-        const wsEndpoint = `wss://stream.binance.com:9443/ws/btcusdt@kline_${this.state.currentInterval}`;
-        this.state.ws = new WebSocket(wsEndpoint);
+        this.state.socket = new WebSocket(`wss://stream.binance.com:9443/ws/${this.state.currentSymbol.toLowerCase()}@ticker`);
         
-        this.state.ws.onopen = () => {
-            console.log("WebSocket подключен");
-        };
-        
-        this.state.ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (!data.k) return;
-                
-                const candle = data.k;
-                const newPrice = parseFloat(candle.c);
-                const priceChanged = newPrice !== this.state.prices.BTC;
-                
-                this.state.prices.BTC = newPrice;
-                
-                if (this.state.candleSeries) {
-                    this.state.candleSeries.update({
-                        time: candle.t / 1000,
-                        open: parseFloat(candle.o),
-                        high: parseFloat(candle.h),
-                        low: parseFloat(candle.l),
-                        close: newPrice
-                    });
-                }
-                
-                if (priceChanged) {
-                    this.updateUI();
-                }
-                
-            } catch (error) {
-                console.log("Ошибка обработки WebSocket сообщения:", error);
+        this.state.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const asset = this.state.currentSymbol.includes('BTC') ? 'BTC' : 'ETH';
+            const newPrice = parseFloat(data.c);
+            
+            this.state.prevPrices[asset] = this.state.prices[asset];
+            this.state.prices[asset] = newPrice;
+            
+            this.updatePriceChange();
+            this.updateUI();
+            
+            // Обновляем график каждые 10 секунд
+            if (Date.now() % 10 === 0) {
+                this.updateChart();
             }
         };
-        
-        this.state.ws.onerror = (error) => {
-            console.log("WebSocket ошибка:", error);
-            setTimeout(() => this.connectWebSocket(), 5000); // Переподключение через 5 сек
-        };
-        
-        this.state.ws.onclose = () => {
-            console.log("WebSocket закрыт, переподключаемся...");
-            setTimeout(() => this.connectWebSocket(), 5000);
-        };
     }
 
-    getMockCandleData() {
-        const now = Math.floor(Date.now() / 1000);
-        return Array.from({ length: 100 }, (_, i) => {
-            const basePrice = 50000;
-            const open = basePrice * (1 + Math.sin(i/10) * 0.02);
-            const close = basePrice * (1 + Math.sin((i+1)/10) * 0.02);
-            const high = Math.max(open, close) * (1 + Math.random() * 0.01);
-            const low = Math.min(open, close) * (1 - Math.random() * 0.01);
-            
-            return {
-                time: now - (100 - i) * 3600,
-                open,
-                high,
-                low,
-                close
-            };
-        });
+    updatePriceChange() {
+        const asset = document.getElementById('asset-select').value;
+        const priceChangeElement = document.getElementById('price-change');
+        
+        if (this.state.prevPrices[asset] === 0) return;
+        
+        const change = ((this.state.prices[asset] - this.state.prevPrices[asset]) / this.state.prevPrices[asset]) * 100;
+        priceChangeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+        priceChangeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
     }
 
-    async updateChartData(interval) {
-        if (!this.state.chart || !this.state.candleSeries) return;
+    async updateChart() {
+        if (!this.state.chart) return;
         
         try {
-            this.state.currentInterval = interval;
-            const loader = document.getElementById('chartLoader');
-            loader.style.display = 'block';
-            
             const data = await this.fetchChartData();
-            this.state.candleSeries.setData(data);
-            this.state.chart.timeScale().fitContent();
-            
-            // Переподключаем WebSocket с новым интервалом
-            this.connectWebSocket();
-            
-            loader.style.display = 'none';
+            this.state.chart.data.labels = data.labels;
+            this.state.chart.data.datasets[0].data = data.prices;
+            this.state.chart.update();
         } catch (error) {
             console.error("Ошибка обновления графика:", error);
         }
-    }
-
-    startPriceUpdates() {
-        // Обновляем данные каждые 30 секунд (как fallback если WebSocket отключится)
-        this.priceUpdateInterval = setInterval(async () => {
-            if (!this.state.ws || this.state.ws.readyState !== WebSocket.OPEN) {
-                await this.updateChartData(this.state.currentInterval);
-            }
-            this.updateUI();
-        }, 30000);
     }
 
     executeTrade(action, asset) {
@@ -271,7 +166,7 @@ class TradingApp {
             asset,
             amount,
             price,
-            total: amount * price,
+            total: action === 'BUY' ? amount : amount * price,
             timestamp: new Date().toLocaleString()
         });
 
@@ -280,29 +175,14 @@ class TradingApp {
     }
 
     updateUI() {
-        // Обновляем баланс
         document.getElementById('balance').textContent = this.state.balance.toFixed(2) + ' USDT';
         
-        // Обновляем текущую цену и изменение
         const asset = document.getElementById('asset-select').value;
-        const priceElement = document.getElementById('current-price');
-        const changeElement = document.getElementById('price-change');
+        document.getElementById('current-price').textContent = this.state.prices[asset].toFixed(2);
         
-        priceElement.textContent = this.state.prices[asset].toFixed(2);
-        
-        if (this.state.priceChange[asset] >= 0) {
-            changeElement.style.color = 'var(--profit)';
-            changeElement.textContent = '+' + this.state.priceChange[asset].toFixed(2) + '%';
-        } else {
-            changeElement.style.color = 'var(--loss)';
-            changeElement.textContent = this.state.priceChange[asset].toFixed(2) + '%';
-        }
-        
-        // Обновляем портфель
         document.getElementById('btc-amount').textContent = this.state.portfolio.BTC.toFixed(6);
         document.getElementById('eth-amount').textContent = this.state.portfolio.ETH.toFixed(6);
         
-        // Обновляем историю
         this.updateHistory();
     }
 
@@ -316,7 +196,7 @@ class TradingApp {
             item.innerHTML = `
                 <div class="trade-type">${trade.type === 'BUY' ? '🟢 Куплено' : '🔴 Продано'} ${trade.asset}</div>
                 <div class="trade-details">
-                    <span>${trade.amount.toFixed(6)} по ${trade.price.toFixed(2)}</span>
+                    <span>${trade.amount.toFixed(6)} ${trade.asset} по ${trade.price.toFixed(2)}</span>
                     <span>${trade.total.toFixed(2)} USDT</span>
                 </div>
                 <div class="trade-time">${trade.timestamp}</div>
@@ -337,7 +217,6 @@ class TradingApp {
     }
 
     setupEventListeners() {
-        // Кнопки купить/продать
         document.getElementById('buy-btn').addEventListener('click', () => {
             const asset = document.getElementById('asset-select').value;
             this.executeTrade('BUY', asset);
@@ -348,18 +227,12 @@ class TradingApp {
             this.executeTrade('SELL', asset);
         });
         
-        // Изменение актива
-        document.getElementById('asset-select').addEventListener('change', () => {
+        document.getElementById('asset-select').addEventListener('change', async () => {
+            const asset = document.getElementById('asset-select').value;
+            this.state.currentSymbol = `${asset}USDT`;
+            await this.updateChart();
+            this.connectWebSocket();
             this.updateUI();
-        });
-        
-        // Кнопки таймфреймов
-        document.querySelectorAll('.timeframe-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.updateChartData(btn.dataset.interval);
-            });
         });
     }
 }
