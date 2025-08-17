@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Трейдинг-симулятор</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -14,12 +14,12 @@
             <h1>💰 Crypto Trader Pro</h1>
             <div class="balance-card">
                 <h3>Баланс</h3>
-                <div class="balance-amount" id="balance">100.00 USDT</div>
+                <div class="balance-amount" id="balance">10000.00 USDT</div>
             </div>
         </header>
 
         <div class="chart-container">
-            <canvas id="priceChart"></canvas>
+            <div id="priceChart"></div>
             <div class="chart-loader" id="chartLoader">Загрузка данных...</div>
         </div>
 
@@ -28,8 +28,7 @@
                 <option value="BTC">BTC/USDT</option>
                 <option value="ETH">ETH/USDT</option>
             </select>
-            <div class="asset-price" id="current-price">50,000.00</div>
-            <div class="price-change" id="price-change">+0.00%</div>
+            <div class="asset-price" id="current-price">50000.00</div>
         </div>
 
         <div class="trade-panel">
