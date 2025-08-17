@@ -11,7 +11,7 @@
 <body>
     <div class="app-container">
         <header class="header">
-            <h1>💰 Crypto Trader Pro</h1>
+            <h1>💰 Трейдинг Симулятор</h1>
             <div class="balance-card">
                 <h3>Баланс</h3>
                 <div class="balance-amount" id="balance">10000.00 USDT</div>
@@ -20,7 +20,13 @@
 
         <div class="chart-container">
             <div id="priceChart"></div>
-            <div class="chart-loader" id="chartLoader">Загрузка данных...</div>
+            <div class="chart-loader" id="chartLoader">Загрузка графика...</div>
+        </div>
+
+        <div class="timeframe-selector">
+            <button class="timeframe-btn active" data-interval="1h">1 час</button>
+            <button class="timeframe-btn" data-interval="4h">4 часа</button>
+            <button class="timeframe-btn" data-interval="1d">1 день</button>
         </div>
 
         <div class="asset-selector">
@@ -28,11 +34,14 @@
                 <option value="BTC">BTC/USDT</option>
                 <option value="ETH">ETH/USDT</option>
             </select>
-            <div class="asset-price" id="current-price">50000.00</div>
+            <div class="asset-info">
+                <div class="asset-price" id="current-price">50000.00</div>
+                <div class="price-change" id="price-change">+0.00%</div>
+            </div>
         </div>
 
         <div class="trade-panel">
-            <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма" value="100">
+            <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма USDT" value="100">
             <button id="buy-btn" class="trade-btn buy-btn">Купить</button>
             <button id="sell-btn" class="trade-btn sell-btn">Продать</button>
         </div>
