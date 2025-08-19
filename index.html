@@ -3,90 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Trading Simulator</title>
+    <title>TradeLearn - Симулятор трейдинга</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div class="app-container">
-        <!-- Учитель трейдинга -->
-        <div class="teacher-container">
-            <div class="teacher-header">
-                <div class="teacher-avatar">👨‍🏫</div>
-                <h3>Тренер Макс</h3>
-                <button class="teacher-toggle" id="teacher-toggle">▲</button>
-            </div>
-            <div class="teacher-content" id="teacher-content">
-                <div class="teacher-message" id="teacher-message">
-                    Привет! Я помогу тебе освоить трейдинг. Начнем с основ!
-                </div>
-                <div class="teacher-controls">
-                    <button class="teacher-btn" data-lesson="basics">📚 Основы</button>
-                    <button class="teacher-btn" data-lesson="analysis">📊 Анализ</button>
-                    <button class="teacher-btn" data-lesson="strategy">🎯 Стратегии</button>
-                    <button class="teacher-btn" data-lesson="hint">💡 Подсказка</button>
-                </div>
-                <div class="lesson-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-fill"></div>
-                    </div>
-                    <span>Прогресс: <span id="progress-text">0%</span></span>
-                </div>
-            </div>
-        </div>
-
         <header class="header">
-            <h1>📊 Crypto Trader Pro</h1>
-            <div class="balance-card">
-                <h3>Баланс</h3>
-                <div class="balance-amount" id="balance">100.00 USDT</div>
+            <div class="header-left">
+                <h1>📈 TradeLearn</h1>
+                <p>Симулятор трейдинга для начинающих</p>
+            </div>
+            <div class="header-right">
+                <div class="balance-card">
+                    <span>Баланс:</span>
+                    <span class="balance-amount" id="balance">10,000.00 USDT</span>
+                </div>
             </div>
         </header>
 
-        <div class="chart-container">
-            <div id="candleChart"></div>
-            <div class="chart-loader" id="chartLoader">Загрузка графика...</div>
-        </div>
+        <div class="main-content">
+            <!-- Левая колонка - График и торговля -->
+            <div class="left-column">
+                <div class="chart-section">
+                    <div class="chart-header">
+                        <select id="asset-select" class="asset-select">
+                            <option value="BTC">BTC/USDT</option>
+                            <option value="ETH">ETH/USDT</option>
+                            <option value="SOL">SOL/USDT</option>
+                        </select>
+                        <div class="timeframe-selector">
+                            <button class="timeframe-btn active" data-tf="1h">1H</button>
+                            <button class="timeframe-btn" data-tf="4h">4H</button>
+                            <button class="timeframe-btn" data-tf="1d">1D</button>
+                        </div>
+                        <div class="price-display">
+                            <span class="asset-price" id="current-price">0.00</span>
+                            <span class="price-change" id="price-change">+0.00%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div id="candleChart"></div>
+                        <div class="chart-loader" id="chartLoader">Загрузка графика...</div>
+                    </div>
 
-        <div class="asset-selector">
-            <select id="asset-select" class="asset-select">
-                <option value="BTC">BTC/USDT</option>
-                <option value="ETH">ETH/USDT</option>
-                <option value="SOL">SOL/USDT</option>
-            </select>
-            <div class="price-display">
-                <div class="asset-price" id="current-price">0.00</div>
-                <div class="price-change" id="price-change">+0.00%</div>
+                    <div class="indicator-controls">
+                        <label class="indicator-checkbox">
+                            <input type="checkbox" id="sma-toggle" checked>
+                            <span>SMA (20)</span>
+                        </label>
+                        <label class="indicator-checkbox">
+                            <input type="checkbox" id="ema-toggle">
+                            <span>EMA (12)</span>
+                        </label>
+                        <label class="indicator-checkbox">
+                            <input type="checkbox" id="rsi-toggle">
+                            <span>RSI</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="trading-panel">
+                    <h3>Торговля</h3>
+                    <div class="trade-inputs">
+                        <div class="input-group">
+                            <label>Сумма (USDT):</label>
+                            <input type="number" id="trade-amount" class="trade-input" value="100" min="1">
+                        </div>
+                        <div class="trade-buttons">
+                            <button id="buy-btn" class="trade-btn buy-btn">
+                                <span>Купить</span>
+                                <small>LONG</small>
+                            </button>
+                            <button id="sell-btn" class="trade-btn sell-btn">
+                                <span>Продать</span>
+                                <small>SHORT</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка - Информация и история -->
+            <div class="right-column">
+                <div class="info-section">
+                    <h3>📊 Основные показатели</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-label">Объем 24ч</span>
+                            <span class="metric-value" id="volume-24h">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Максимум</span>
+                            <span class="metric-value" id="high-24h">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Минимум</span>
+                            <span class="metric-value" id="low-24h">0</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Изменение</span>
+                            <span class="metric-value" id="change-24h">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="portfolio-section">
+                    <h3>💼 Портфель</h3>
+                    <div class="portfolio-grid">
+                        <div class="portfolio-item">
+                            <span>BTC:</span>
+                            <span id="btc-amount">0.000000</span>
+                        </div>
+                        <div class="portfolio-item">
+                            <span>ETH:</span>
+                            <span id="eth-amount">0.000000</span>
+                        </div>
+                        <div class="portfolio-item">
+                            <span>SOL:</span>
+                            <span id="sol-amount">0.000000</span>
+                        </div>
+                        <div class="portfolio-item">
+                            <span>Общая стоимость:</span>
+                            <span id="total-value">0.00 USDT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="history-section">
+                    <h3>📋 История сделок</h3>
+                    <div class="history-list" id="history-items">
+                        <div class="empty-history">Сделок пока нет</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="trade-panel">
-            <input type="number" id="trade-amount" class="trade-input" placeholder="Сумма USDT" value="100">
-            <button id="buy-btn" class="trade-btn buy-btn">Купить</button>
-            <button id="sell-btn" class="trade-btn sell-btn">Продать</button>
-        </div>
-
-        <div class="portfolio-section">
-            <h3>Ваш портфель</h3>
-            <div id="portfolio-items">
-                <div class="portfolio-item">
-                    <span>BTC:</span>
-                    <span id="btc-amount">0.000000</span>
-                </div>
-                <div class="portfolio-item">
-                    <span>ETH:</span>
-                    <span id="eth-amount">0.000000</span>
-                </div>
-                <div class="portfolio-item">
-                    <span>SOL:</span>
-                    <span id="sol-amount">0.000000</span>
-                </div>
+        <!-- Всплывающие подсказки для новичков -->
+        <div class="tooltip" id="chart-tooltip">
+            <div class="tooltip-content">
+                <h4>💡 Как читать график?</h4>
+                <p>Зеленые свечи - цена росла, красные - падала. Длинные свечи - сильное движение.</p>
             </div>
-        </div>
-
-        <div class="history">
-            <h3>История сделок</h3>
-            <div id="history-items"></div>
         </div>
     </div>
     <script src="script.js"></script>
