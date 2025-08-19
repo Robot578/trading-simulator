@@ -1,72 +1,3 @@
-class TradingTeacher {
-    constructor() {
-        this.lessons = {
-            basics: [
-                "📚 Добро пожаловать в трейдинг! Трейдинг - это покупка и продажа активов с целью заработка на разнице цен.",
-                "💰 Ключевые понятия: LONG (покупка в расчете на рост) и SHORT (продажа в расчете на падение).",
-                "⏰ Таймфреймы важны! Дневные графики для стратегии, часовые - для точных входов, минутные - для скальпинга.",
-                "🎯 Риск-менеджмент: никогда не рискуй более 2% депозита в одной сделке! Это золотое правило.",
-                "📊 Анализируй объемы торгов: большой объем подтверждает движение цены. Маленький объем - возможный разворот.",
-                "🔐 Всегда используй стоп-лосс! Защищай свой депозит от больших потерь.",
-                "💡 Начинай с демо-счета! Только после стабильной прибыли переходи на реальные деньги."
-            ],
-            analysis: [
-                "📈 Технический анализ: изучай графики и индикаторы для предсказания движения цены.",
-                "🕯️ Японские свечи: каждая свеча показывает цену открытия, закрытия, максимум и минимум за период.",
-                "📉 Медвежья свеча (красная) - цена закрытия ниже открытия. Бычья свеча (зеленая) - цена закрытия выше открытия.",
-                "🎪 Паттерны: 'голова и плечи', 'двойное дно', 'флаг' - помогают предсказать развороты тренда.",
-                "📡 Индикаторы: RSI показывает перекупленность/перепроданность, SMA - среднюю цену, MACD - momentum.",
-                "🌊 Волны Эллиотта: цена движется импульсами и коррекциями. 5 волн вверх, 3 волны вниз.",
-                "📊 Уровни поддержки и сопротивления: цена часто отскакивает от этих уровней."
-            ],
-            strategy: [
-                "🎮 Стратегия - твой план действий. Без стратегии это азартная игра, а не трейдинг!",
-                "🔍 Пример стратегии: покупай когда RSI ниже 30 (перепроданность), продавай когда выше 70 (перекупленность).",
-                "⏱️ Скальпинг: много быстрых сделок с маленькой прибылью. Нужна хорошая концентрация.",
-                "📈 Свинг-трейдинг: сделки на несколько дней. Меньше стресса, больше времени на анализ.",
-                "📝 Веди дневник трейдера: записывай все сделки, анализируй ошибки, улучшай стратегию.",
-                "🧘 Дисциплина важнее таланта! Следуй своему плану и управляй эмоциями.",
-                "⚖️ Диверсификация: не вкладывай все в один актив. Распределяй риски."
-            ]
-        };
-        
-        this.currentProgress = 0;
-        this.completedLessons = new Set();
-    }
-
-    getLesson(lessonType) {
-        const lesson = this.lessons[lessonType];
-        if (lesson) {
-            return lesson[Math.floor(Math.random() * lesson.length)];
-        }
-        return "Выберите тему для обучения!";
-    }
-
-    getHint() {
-        const hints = [
-            "💡 Совет: начни с малых сумм пока не наберешься опыта! Не спеши заработать миллион за день.",
-            "👀 Смотри на объем торгов - он подтверждает тренд! Большой объем = сильное движение.",
-            "📆 Изучи экономический календарь - новости влияют на цены! FOMC, NFP, CPI - важные события.",
-            "🧠 Не поддавайся FOMO (страх упустить выгоду) - терпение важнее скорости!",
-            "📚 Изучи бестселлеры: 'Трейдинг для начинающих', 'Дисциплинированный трейдер'.",
-            "⚡ Избегай эмоциональных решений! Торгуй по плану, а не из-за жадности или страха.",
-            "🔄 Анализируй свои сделки: что работало, что нет? Учись на ошибках."
-        ];
-        return hints[Math.floor(Math.random() * hints.length)];
-    }
-
-    updateProgress() {
-        this.currentProgress = Math.min(100, this.currentProgress + 8);
-        document.getElementById('progress-fill').style.width = this.currentProgress + '%';
-        document.getElementById('progress-text').textContent = this.currentProgress + '%';
-        
-        if (this.currentProgress >= 100) {
-            document.getElementById('teacher-message').textContent = 
-                "🎉 Поздравляю! Ты завершил базовый курс! Продолжай практиковаться!";
-        }
-    }
-}
-
 class TradingApp {
     constructor() {
         this.state = {
@@ -76,50 +7,41 @@ class TradingApp {
             history: [],
             chart: null,
             candleSeries: null,
+            smaSeries: null,
+            emaSeries: null,
             socket: null,
             candles: [],
-            currentAsset: 'BTC'
+            currentAsset: 'BTC',
+            timeframe: '1h'
         };
 
-        this.teacher = new TradingTeacher();
         this.init();
     }
 
     async init() {
         this.initChart();
         this.setupEventListeners();
-        this.setupTeacher();
         await this.loadInitialData();
         this.updateUI();
+        this.showWelcomeTooltip();
     }
 
-    setupTeacher() {
-        const content = document.getElementById('teacher-content');
-        const toggle = document.getElementById('teacher-toggle');
+    showWelcomeTooltip() {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.innerHTML = `
+            <div class="tooltip-content">
+                <h4>🎯 Добро пожаловать в TradeLearn!</h4>
+                <p>Это безопасная среда для обучения трейдингу. Торгуйте виртуальными деньгами и изучайте рынок!</p>
+                <p><strong>Совет:</strong> Начните с малых сумм и наблюдайте за графиком.</p>
+            </div>
+        `;
+        document.body.appendChild(tooltip);
         
-        toggle.addEventListener('click', () => {
-            content.style.display = content.style.display === 'none' ? 'block' : 'none';
-            toggle.textContent = content.style.display === 'none' ? '▼' : '▲';
-        });
-
-        document.querySelectorAll('.teacher-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const lesson = e.target.dataset.lesson;
-                let message;
-                
-                if (lesson === 'hint') {
-                    message = this.teacher.getHint();
-                } else {
-                    message = this.teacher.getLesson(lesson);
-                    if (!this.teacher.completedLessons.has(lesson)) {
-                        this.teacher.completedLessons.add(lesson);
-                        this.teacher.updateProgress();
-                    }
-                }
-                
-                document.getElementById('teacher-message').textContent = message;
-            });
-        });
+        setTimeout(() => {
+            tooltip.style.display = 'block';
+            setTimeout(() => tooltip.remove(), 8000);
+        }, 1000);
     }
 
     initChart() {
@@ -130,18 +52,18 @@ class TradingApp {
             width: chartContainer.clientWidth,
             height: chartContainer.clientHeight,
             layout: {
-                backgroundColor: '#1e293b',
-                textColor: '#e2e8f0',
+                backgroundColor: '#ffffff',
+                textColor: '#1e293b',
                 fontSize: 12
             },
             grid: {
-                vertLines: { color: 'rgba(42, 46, 57, 0.5)' },
-                horzLines: { color: 'rgba(42, 46, 57, 0.5)' }
+                vertLines: { color: '#e2e8f0' },
+                horzLines: { color: '#e2e8f0' }
             },
             timeScale: {
                 timeVisible: true,
                 secondsVisible: false,
-                borderColor: '#2a2e39'
+                borderColor: '#e2e8f0'
             },
             crosshair: {
                 mode: LightweightCharts.CrosshairMode.Normal
@@ -149,14 +71,30 @@ class TradingApp {
         });
 
         this.state.candleSeries = this.state.chart.addCandlestickSeries({
-            upColor: '#10b981',
-            downColor: '#ef4444',
-            borderDownColor: '#ef4444',
-            borderUpColor: '#10b981',
-            wickDownColor: '#ef4444',
-            wickUpColor: '#10b981',
+            upColor: '#00c853',
+            downColor: '#ff1744',
+            borderDownColor: '#ff1744',
+            borderUpColor: '#00c853',
+            wickDownColor: '#ff1744',
+            wickUpColor: '#00c853',
             borderVisible: true,
             wickVisible: true
+        });
+
+        // SMA индикатор
+        this.state.smaSeries = this.state.chart.addLineSeries({
+            color: '#2962ff',
+            lineWidth: 2,
+            lineStyle: 0,
+            title: 'SMA 20'
+        });
+
+        // EMA индикатор
+        this.state.emaSeries = this.state.chart.addLineSeries({
+            color: '#ff6d00',
+            lineWidth: 2,
+            lineStyle: 0,
+            title: 'EMA 12'
         });
 
         document.getElementById('chartLoader').style.display = 'none';
@@ -167,15 +105,17 @@ class TradingApp {
         this.state.currentAsset = asset;
         await this.fetchCandles(asset);
         this.connectWebSocket();
+        this.updateIndicators();
     }
 
     async fetchCandles(asset) {
         const symbol = `${asset}USDT`;
+        const interval = this.state.timeframe;
         
         try {
             document.getElementById('chartLoader').style.display = 'block';
             
-            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=100`);
+            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=100`);
             const data = await response.json();
 
             this.state.candles = data.map(item => ({
@@ -183,17 +123,21 @@ class TradingApp {
                 open: parseFloat(item[1]),
                 high: parseFloat(item[2]),
                 low: parseFloat(item[3]),
-                close: parseFloat(item[4])
+                close: parseFloat(item[4]),
+                volume: parseFloat(item[5])
             }));
 
             this.state.candleSeries.setData(this.state.candles);
             
-            const lastPrice = parseFloat(data[data.length - 1][4]);
-            this.state.prices[asset] = lastPrice;
+            const lastCandle = this.state.candles[this.state.candles.length - 1];
+            this.state.prices[asset] = lastCandle.close;
             
-            document.getElementById('current-price').textContent = lastPrice.toFixed(2);
+            // Обновляем метрики
+            this.updateMetrics(data);
+            
+            document.getElementById('current-price').textContent = lastCandle.close.toFixed(2);
             document.getElementById('price-change').textContent = '+0.00%';
-            document.getElementById('price-change').style.color = '#10b981';
+            document.getElementById('price-change').style.color = '#00c853';
             
             document.getElementById('chartLoader').style.display = 'none';
             
@@ -201,6 +145,62 @@ class TradingApp {
             console.error("Ошибка загрузки данных:", error);
             document.getElementById('chartLoader').textContent = "Ошибка загрузки данных";
         }
+    }
+
+    updateMetrics(data) {
+        const volumes = data.map(item => parseFloat(item[5]));
+        const highs = data.map(item => parseFloat(item[2]));
+        const lows = data.map(item => parseFloat(item[3]));
+        const closes = data.map(item => parseFloat(item[4]));
+
+        const totalVolume = volumes.reduce((sum, vol) => sum + vol, 0);
+        const maxHigh = Math.max(...highs);
+        const minLow = Math.min(...lows);
+        const priceChange = ((closes[closes.length - 1] - closes[0]) / closes[0]) * 100;
+
+        document.getElementById('volume-24h').textContent = totalVolume.toFixed(0);
+        document.getElementById('high-24h').textContent = maxHigh.toFixed(2);
+        document.getElementById('low-24h').textContent = minLow.toFixed(2);
+        document.getElementById('change-24h').textContent = priceChange.toFixed(2) + '%';
+        document.getElementById('change-24h').style.color = priceChange >= 0 ? '#00c853' : '#ff1744';
+    }
+
+    updateIndicators() {
+        if (document.getElementById('sma-toggle').checked) {
+            const smaData = this.calculateSMA(this.state.candles.map(c => c.close), 20);
+            this.state.smaSeries.setData(smaData);
+            this.state.smaSeries.applyOptions({ visible: true });
+        } else {
+            this.state.smaSeries.applyOptions({ visible: false });
+        }
+
+        if (document.getElementById('ema-toggle').checked) {
+            const emaData = this.calculateEMA(this.state.candles.map(c => c.close), 12);
+            this.state.emaSeries.setData(emaData);
+            this.state.emaSeries.applyOptions({ visible: true });
+        } else {
+            this.state.emaSeries.applyOptions({ visible: false });
+        }
+    }
+
+    calculateSMA(data, period) {
+        const result = [];
+        for (let i = period - 1; i < data.length; i++) {
+            const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+            result.push({ time: this.state.candles[i].time, value: sum / period });
+        }
+        return result;
+    }
+
+    calculateEMA(data, period) {
+        const k = 2 / (period + 1);
+        const result = [{ time: this.state.candles[period - 1].time, value: data.slice(0, period).reduce((a, b) => a + b, 0) / period }];
+        
+        for (let i = period; i < data.length; i++) {
+            const ema = data[i] * k + result[result.length - 1].value * (1 - k);
+            result.push({ time: this.state.candles[i].time, value: ema });
+        }
+        return result;
     }
 
     connectWebSocket() {
@@ -218,24 +218,19 @@ class TradingApp {
                 const data = JSON.parse(event.data);
                 const price = parseFloat(data.c);
                 const change = parseFloat(data.P);
+                const volume = parseFloat(data.v);
 
                 this.state.prices[asset] = price;
                 
                 document.getElementById('current-price').textContent = price.toFixed(2);
                 document.getElementById('price-change').textContent = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
-                document.getElementById('price-change').style.color = change >= 0 ? '#10b981' : '#ef4444';
+                document.getElementById('price-change').style.color = change >= 0 ? '#00c853' : '#ff1744';
+                
+                document.getElementById('volume-24h').textContent = volume.toFixed(0);
                 
             } catch (error) {
                 console.error("Ошибка обработки WebSocket сообщения:", error);
             }
-        };
-
-        this.state.socket.onerror = (error) => {
-            console.error("WebSocket ошибка:", error);
-        };
-
-        this.state.socket.onclose = () => {
-            console.log("WebSocket соединение закрыто");
         };
     }
 
@@ -244,7 +239,7 @@ class TradingApp {
         const amount = parseFloat(amountInput.value);
         
         if (isNaN(amount) || amount <= 0) {
-            this.showAlert('Введите корректную сумму!');
+            this.showAlert('Введите корректную сумму!', 'error');
             amountInput.focus();
             return;
         }
@@ -255,7 +250,7 @@ class TradingApp {
         if (action === 'BUY') {
             const amountBought = amount / price;
             if (amount > this.state.balance) {
-                this.showAlert('Недостаточно средств на балансе!');
+                this.showAlert('Недостаточно средств на балансе!', 'error');
                 return;
             }
             
@@ -263,19 +258,14 @@ class TradingApp {
             this.state.portfolio[asset] = (this.state.portfolio[asset] || 0) + amountBought;
             message = `✅ Куплено ${amountBought.toFixed(6)} ${asset} за ${amount.toFixed(2)} USDT`;
             
-            setTimeout(() => {
-                document.getElementById('teacher-message').textContent = 
-                    "💡 После покупки установи стоп-лосс на 2-3% ниже цены входа для защиты депозита!";
-            }, 2000);
-            
         } else {
             if (!this.state.portfolio[asset] || this.state.portfolio[asset] <= 0) {
-                this.showAlert(`Недостаточно ${asset} для продажи!`);
+                this.showAlert(`Недостаточно ${asset} для продажи!`, 'error');
                 return;
             }
             
             if (amount > this.state.portfolio[asset]) {
-                this.showAlert(`Нельзя продать больше ${this.state.portfolio[asset].toFixed(6)} ${asset}`);
+                this.showAlert(`Нельзя продать больше ${this.state.portfolio[asset].toFixed(6)} ${asset}`, 'error');
                 return;
             }
             
@@ -283,11 +273,6 @@ class TradingApp {
             this.state.balance += total;
             this.state.portfolio[asset] -= amount;
             message = `🔴 Продано ${amount.toFixed(6)} ${asset} за ${total.toFixed(2)} USDT`;
-            
-            setTimeout(() => {
-                document.getElementById('teacher-message').textContent = 
-                    "💡 Фиксируй прибыль постепенно! Не жди максимума - цена может развернуться.";
-            }, 2000);
         }
 
         this.state.history.push({
@@ -299,7 +284,7 @@ class TradingApp {
             timestamp: new Date().toLocaleString()
         });
 
-        this.showAlert(message);
+        this.showAlert(message, action === 'BUY' ? 'success' : 'error');
         this.updateUI();
     }
 
@@ -308,6 +293,14 @@ class TradingApp {
         document.getElementById('btc-amount').textContent = (this.state.portfolio.BTC || 0).toFixed(6);
         document.getElementById('eth-amount').textContent = (this.state.portfolio.ETH || 0).toFixed(6);
         document.getElementById('sol-amount').textContent = (this.state.portfolio.SOL || 0).toFixed(6);
+        
+        // Общая стоимость портфеля
+        let totalValue = this.state.balance;
+        Object.keys(this.state.portfolio).forEach(asset => {
+            totalValue += (this.state.portfolio[asset] || 0) * (this.state.prices[asset] || 0);
+        });
+        document.getElementById('total-value').textContent = totalValue.toFixed(2) + ' USDT';
+        
         this.updateHistory();
     }
 
@@ -316,7 +309,7 @@ class TradingApp {
         container.innerHTML = '';
         
         if (this.state.history.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: #64748b; padding: 20px;">Сделок пока нет</div>';
+            container.innerHTML = '<div class="empty-history">Сделок пока нет</div>';
             return;
         }
         
@@ -325,29 +318,40 @@ class TradingApp {
             item.className = `history-item ${trade.type.toLowerCase()}`;
             item.innerHTML = `
                 <div class="trade-type">${trade.type === 'BUY' ? '🟢 Куплено' : '🔴 Продано'} ${trade.asset}</div>
-                <div class="trade-details">
-                    <span>${trade.amount.toFixed(6)} ${trade.asset} по ${trade.price.toFixed(2)} USDT</span>
-                    <span>${trade.total.toFixed(2)} USDT</span>
-                </div>
+                <div class="trade-details">${trade.amount.toFixed(6)} @ ${trade.price.toFixed(2)}</div>
                 <div class="trade-time">${trade.timestamp}</div>
             `;
             container.appendChild(item);
         });
     }
 
-    showAlert(message) {
+    showAlert(message, type = 'info') {
         const alert = document.createElement('div');
-        alert.className = 'trade-alert';
+        alert.className = `alert alert-${type}`;
+        alert.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+            background: ${type === 'success' ? '#00c853' : type === 'error' ? '#ff1744' : '#2962ff'};
+        `;
         alert.textContent = message;
         document.body.appendChild(alert);
         
         setTimeout(() => {
-            alert.style.opacity = '0';
+            alert.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => alert.remove(), 300);
-        }, 3000);
+        }, 4000);
     }
 
     setupEventListeners() {
+        // Торговые кнопки
         document.getElementById('buy-btn').addEventListener('click', () => {
             const asset = document.getElementById('asset-select').value;
             this.executeTrade('BUY', asset);
@@ -357,11 +361,32 @@ class TradingApp {
             const asset = document.getElementById('asset-select').value;
             this.executeTrade('SELL', asset);
         });
-        
+
+        // Смена актива
         document.getElementById('asset-select').addEventListener('change', () => {
             this.loadInitialData();
         });
 
+        // Таймфреймы
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.state.timeframe = e.target.dataset.tf;
+                this.loadInitialData();
+            });
+        });
+
+        // Индикаторы
+        document.getElementById('sma-toggle').addEventListener('change', () => {
+            this.updateIndicators();
+        });
+
+        document.getElementById('ema-toggle').addEventListener('change', () => {
+            this.updateIndicators();
+        });
+
+        // Enter для торговли
         document.getElementById('trade-amount').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 const asset = document.getElementById('asset-select').value;
@@ -370,6 +395,23 @@ class TradingApp {
         });
     }
 }
+
+// Добавляем стили для анимаций
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .alert {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+`;
+document.head.appendChild(style);
 
 // Запуск приложения
 document.addEventListener('DOMContentLoaded', () => {
