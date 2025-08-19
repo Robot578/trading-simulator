@@ -9,11 +9,37 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- Учитель трейдинга -->
+        <div class="teacher-container">
+            <div class="teacher-header">
+                <div class="teacher-avatar">👨‍🏫</div>
+                <h3>Тренер Макс</h3>
+                <button class="teacher-toggle" id="teacher-toggle">▲</button>
+            </div>
+            <div class="teacher-content" id="teacher-content">
+                <div class="teacher-message" id="teacher-message">
+                    Привет! Я помогу тебе освоить трейдинг. Начнем с основ!
+                </div>
+                <div class="teacher-controls">
+                    <button class="teacher-btn" data-lesson="basics">📚 Основы</button>
+                    <button class="teacher-btn" data-lesson="analysis">📊 Анализ</button>
+                    <button class="teacher-btn" data-lesson="strategy">🎯 Стратегии</button>
+                    <button class="teacher-btn" data-lesson="hint">💡 Подсказка</button>
+                </div>
+                <div class="lesson-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <span>Прогресс: <span id="progress-text">0%</span></span>
+                </div>
+            </div>
+        </div>
+
         <header class="header">
             <h1>📊 Crypto Trader Pro</h1>
             <div class="balance-card">
                 <h3>Баланс</h3>
-                <div class="balance-amount" id="balance">10,000.00 USDT</div>
+                <div class="balance-amount" id="balance">100.00 USDT</div>
             </div>
         </header>
 
