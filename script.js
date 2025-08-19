@@ -1,7 +1,7 @@
 class TradingApp {
     constructor() {
         this.state = {
-            balance: 10000,
+            balance: 100,
             portfolio: { BTC: 0, ETH: 0, SOL: 0 },
             prices: { BTC: 0, ETH: 0, SOL: 0 },
             history: [],
@@ -417,3 +417,4 @@ document.head.appendChild(style);
 document.addEventListener('DOMContentLoaded', () => {
     new TradingApp();
 });
+
