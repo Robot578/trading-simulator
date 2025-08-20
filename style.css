@@ -63,7 +63,7 @@ body {
 }
 
 .balance-card {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
     color: white;
     padding: 16px 24px;
     border-radius: 12px;
@@ -73,21 +73,6 @@ body {
 .balance-amount {
     font-size: 1.2rem;
     margin-left: 8px;
-}
-
-.teacher-btn {
-    background: linear-gradient(135deg, #ff6b35, #ff8e53);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.teacher-btn:hover {
-    transform: translateY(-2px);
 }
 
 .main-content {
@@ -300,28 +285,6 @@ body {
     transform: translateY(-2px);
 }
 
-.quick-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.quick-btn {
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    color: var(--text);
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s;
-}
-
-.quick-btn:hover {
-    background: var(--border);
-}
-
 .right-column {
     display: flex;
     flex-direction: column;
@@ -438,323 +401,6 @@ body {
     text-align: right;
 }
 
-.teacher-panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 800px;
-    max-height: 80vh;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    z-index: 2000;
-    display: none;
-    overflow: hidden;
-}
-
-.teacher-panel.active {
-    display: block;
-    animation: slideInUp 0.3s ease;
-}
-
-.teacher-header {
-    background: linear-gradient(135deg, #2962ff, #768fff);
-    color: white;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.teacher-header h3 {
-    margin: 0;
-    font-size: 1.5rem;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 2rem;
-    cursor: pointer;
-    padding: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.close-btn:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-.teacher-content {
-    padding: 0;
-    height: calc(80vh - 80px);
-    display: flex;
-    flex-direction: column;
-}
-
-.teacher-tabs {
-    display: flex;
-    background: #f8fafc;
-    border-bottom: 2px solid #e2e8f0;
-    overflow-x: auto;
-}
-
-.tab-btn {
-    padding: 15px 20px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-weight: 500;
-    color: #64748b;
-    white-space: nowrap;
-    transition: all 0.2s;
-    border-bottom: 3px solid transparent;
-}
-
-.tab-btn.active {
-    color: #2962ff;
-    border-bottom-color: #2962ff;
-    background: white;
-}
-
-.tab-btn:hover {
-    color: #2962ff;
-    background: #f1f5f9;
-}
-
-.tab-content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-    animation: fadeIn 0.3s ease;
-}
-
-.tab-content h4 {
-    color: #2962ff;
-    margin-bottom: 20px;
-    font-size: 1.3rem;
-}
-
-.knowledge-item {
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 15px;
-    border-left: 4px solid #2962ff;
-}
-
-.knowledge-item h5 {
-    color: #1e293b;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-}
-
-.knowledge-item p {
-    color: #64748b;
-    line-height: 1.6;
-    margin: 0;
-}
-
-.teacher-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 1999;
-    display: none;
-}
-
-.teacher-overlay.active {
-    display: block;
-}
-
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    height: 500px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.chat-messages {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-    background: #fafafa;
-}
-
-.message {
-    display: flex;
-    margin-bottom: 15px;
-    animation: fadeIn 0.3s ease;
-}
-
-.message.user-message {
-    flex-direction: row-reverse;
-}
-
-.message-avatar {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    margin: 0 10px;
-    flex-shrink: 0;
-}
-
-.teacher-message .message-avatar {
-    background: linear-gradient(135deg, #2962ff, #768fff);
-    color: white;
-}
-
-.user-message .message-avatar {
-    background: linear-gradient(135deg, #00c853, #00b248);
-    color: white;
-}
-
-.message-content {
-    max-width: 70%;
-    background: white;
-    padding: 12px 16px;
-    border-radius: 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.teacher-message .message-content {
-    background: white;
-    border: 1px solid #e2e8f0;
-}
-
-.user-message .message-content {
-    background: linear-gradient(135deg, #2962ff, #768fff);
-    color: white;
-}
-
-.message-text {
-    margin-bottom: 5px;
-    line-height: 1.4;
-}
-
-.message-time {
-    font-size: 11px;
-    opacity: 0.7;
-    text-align: right;
-}
-
-.user-message .message-time {
-    color: rgba(255,255,255,0.8);
-}
-
-.chat-input-container {
-    display: flex;
-    padding: 15px;
-    background: white;
-    border-top: 1px solid var(--border);
-    gap: 10px;
-}
-
-.chat-input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 2px solid var(--border);
-    border-radius: 25px;
-    outline: none;
-    font-size: 14px;
-}
-
-.chat-input:focus {
-    border-color: var(--primary);
-}
-
-.send-btn {
-    width: 45px;
-    height: 45px;
-    border: none;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2962ff, #768fff);
-    color: white;
-    cursor: pointer;
-    font-size: 16px;
-    transition: transform 0.2s;
-}
-
-.send-btn:hover {
-    transform: scale(1.05);
-}
-
-.quick-questions {
-    padding: 15px;
-    background: #f8fafc;
-    border-top: 1px solid var(--border);
-}
-
-.quick-questions h5 {
-    margin-bottom: 10px;
-    color: var(--text-light);
-    font-size: 14px;
-}
-
-.quick-question-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.quick-question-btn {
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: white;
-    color: var(--text);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.quick-question-btn:hover {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -40%);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
@@ -777,6 +423,23 @@ body {
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     animation: slideIn 0.3s ease;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.saving-indicator {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: var(--primary);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.saving-indicator.visible {
+    opacity: 1;
 }
 
 @media (max-width: 1024px) {
@@ -816,45 +479,6 @@ body {
     .chart-container {
         height: 300px;
     }
-
-    .teacher-panel {
-        width: 95%;
-        height: 90vh;
-        max-height: 90vh;
-    }
-    
-    .teacher-content {
-        height: calc(90vh - 80px);
-    }
-    
-    .teacher-tabs {
-        flex-wrap: wrap;
-    }
-    
-    .tab-btn {
-        padding: 12px 15px;
-        font-size: 14px;
-    }
-    
-    .teacher-header h3 {
-        font-size: 1.2rem;
-    }
-    
-    .chat-container {
-        height: 400px;
-    }
-    
-    .message-content {
-        max-width: 85%;
-    }
-    
-    .quick-question-buttons {
-        grid-template-columns: 1fr;
-    }
-    
-    .chat-input-container {
-        padding: 10px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -872,26 +496,5 @@ body {
     
     .indicator-controls {
         flex-direction: column;
-    }
-    
-    .teacher-header {
-        padding: 15px;
-    }
-    
-    .tab-content {
-        padding: 15px;
-    }
-    
-    .knowledge-item {
-        padding: 15px;
-    }
-    
-    .teacher-tabs {
-        flex-direction: column;
-    }
-    
-    .tab-btn {
-        padding: 10px;
-        text-align: center;
     }
 }
