@@ -150,6 +150,7 @@
                     <button class="tab-btn" data-tab="analysis">Анализ</button>
                     <button class="tab-btn" data-tab="strategies">Стратегии</button>
                     <button class="tab-btn" data-tab="risks">Риски</button>
+                    <button class="tab-btn" data-tab="chat">💬 Спросить</button>
                 </div>
                 
                 <div class="tab-content active" id="basics-content">
@@ -193,6 +194,36 @@
                     <div class="knowledge-item">
                         <h5>Стоп-лосс обязателен!</h5>
                         <p>Всегда устанавливай стоп-лосс для ограничения убытков.</p>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="chat-content">
+                    <h4>💬 Спросите у учителя</h4>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message teacher-message">
+                                <div class="message-avatar">🎓</div>
+                                <div class="message-content">
+                                    <div class="message-text">Привет! Я ваш тренер по трейдингу. Спросите меня о чем угодно: анализе, стратегиях, рисках или основах торговли!</div>
+                                    <div class="message-time">Сейчас</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input-container">
+                            <input type="text" id="chat-input" placeholder="Задайте ваш вопрос..." class="chat-input">
+                            <button id="send-message" class="send-btn">➤</button>
+                        </div>
+                        
+                        <div class="quick-questions">
+                            <h5>⚡ Быстрые вопросы:</h5>
+                            <div class="quick-question-buttons">
+                                <button class="quick-question-btn" data-question="что такое свечной график?">Свечной график</button>
+                                <button class="quick-question-btn" data-question="как читать свечи?">Чтение свечей</button>
+                                <button class="quick-question-btn" data-question="что такое стоп-лосс?">Стоп-лосс</button>
+                                <button class="quick-question-btn" data-question="как определить тренд?">Определение тренда</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
