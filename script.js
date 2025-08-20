@@ -17,77 +17,6 @@ class TradingApp {
 
         this.tg = window.Telegram?.WebApp;
         
-        this.teacherKnowledge = {
-            basics: [
-                {
-                    question: "что такое свечной график",
-                    answer: "📊 Свечной график показывает движение цены за период. Каждая свеча состоит из тела (разница между открытием и закрытием) и теней (максимум и минимум периода). Зеленая свеча = рост цены, красная = падение."
-                },
-                {
-                    question: "как читать свечи",
-                    answer: "🔍 Чтение свечей: верх тени = максимум, низ тени = минимум, тело = разница открытия/закрытия. Длинное тело = сильное движение, маленькое тело = нерешительность рынка. Длинные верхние тени = продавцы активны, длинные нижние = покупатели активны."
-                },
-                {
-                    question: "что такое long и short",
-                    answer: "🎯 LONG (лонг) - покупка актива в расчете на рост цены. SHORT (шорт) - продажа актива в расчете на падение цены. Лонг прибылен при росте, шорт - при падении."
-                },
-                {
-                    question: "что такое волатильность",
-                    answer: "🌊 Волатильность - это степень изменения цены актива. Высокая волатильность означает большие колебания цены, что создает как возможности для прибыли, так и риски. Низкая волатильность - спокойный рынок с малыми движениями."
-                }
-            ],
-            analysis: [
-                {
-                    question: "что такое sma",
-                    answer: "📈 SMA (Simple Moving Average) - простая скользящая средняя. Показывает среднюю цену за период. Например, SMA20 = средняя цена за 20 периодов. Цена выше SMA = восходящий тренд, ниже = нисходящий."
-                },
-                {
-                    question: "зачем нужна ema",
-                    answer: "⚡ EMA (Exponential Moving Average) - экспоненциальная скользящая средняя. Более чувствительна к последним ценам, быстрее реагирует на изменения тренда. Лучше подходит для краткосрочной торговли."
-                },
-                {
-                    question: "как определить тренд",
-                    answer: "🔍 Тренд определяется по последовательным максимумам и минимумам. Восходящий тренд: каждый следующий максимум и минимум выше предыдущего. Нисходящий: каждый следующий максимум и минимум ниже предыдущего."
-                },
-                {
-                    question: "что такое поддержка и сопротивление",
-                    answer: "⚖️ Поддержка - уровень, где цена часто останавливает падение и разворачивается вверх. Сопротивление - уровень, где цена останавливает рост и разворачивается вниз. Пробой этих уровней часто приводит к сильным движениям."
-                }
-            ],
-            strategies: [
-                {
-                    question: "какие стратегии бывают",
-                    answer: "🎯 Основные стратегии: 1) Трендовая - следуем за трендом 2) От уровней - покупаем у поддержки, продаем у сопротивления 3) Пробойная - торгуем пробой уровней 4) Скальпинг - много быстрых сделок"
-                },
-                {
-                    question: "как торговать по тренду",
-                    answer: "📈 Торговля по тренду: определяем направление тренда, ждем отката к скользящим средним или уровням поддержки/сопротивления, входим в направлении тренда. Стоп-лосс за последним локальным минимумом/максимумом."
-                },
-                {
-                    question: "что такое скальпинг",
-                    answer: "⚡ Скальпинг - стиль торговли с очень короткими сделками (от секунд до минут). Используются малые таймфреймы (1-5 минут). Прибыль небольшая, но много сделок. Требует высокой дисциплины и быстрой реакции."
-                }
-            ],
-            risks: [
-                {
-                    question: "как управлять рисками",
-                    answer: "⚠️ Управление рисками: 1) Рискуй не более 1-2% депозита в сделке 2) Всегда используй стоп-лосс 3) Соотношение риск/прибыль минимум 1:3 4) Диверсифицируй портфель 5) Торгуй по плану, а не эмоциям"
-                },
-                {
-                    question: "что такое стоп лосс",
-                    answer: "🛑 Стоп-лосс - приказ на автоматическое закрытие сделки при достижении определенной цены. Например, купил по $100, стоп-лосс на $95. Защищает от больших убытков при неправильном прогнозе."
-                },
-                {
-                    question: "сколько рисковать",
-                    answer: "💰 В одной сделке рисковать не более 1-2% от депозита. При депозите $1000 - максимум $10-20 убытка на сделку. Это позволяет пережить серию неудачных сделок."
-                },
-                {
-                    question: "что такое диверсификация",
-                    answer: "⚖️ Диверсификация - распределение капитала между разными активами. Не вкладывай все в один актив. Это снижает общие риски - если один актив падает, другие могут расти."
-                }
-            ]
-        };
-
         this.init();
     }
 
@@ -97,8 +26,6 @@ class TradingApp {
         this.setupEventListeners();
         await this.loadInitialData();
         this.updateUI();
-        this.setupTeacherPanel();
-        this.setupChat();
     }
 
     async loadSavedData() {
@@ -171,129 +98,6 @@ class TradingApp {
         localStorage.setItem('tradePortfolio', JSON.stringify(data.portfolio));
         localStorage.setItem('tradeHistory', JSON.stringify(data.history));
         localStorage.setItem('tradePrices', JSON.stringify(data.prices));
-    }
-
-    setupTeacherPanel() {
-        document.getElementById('teacher-btn').addEventListener('click', () => {
-            this.showTeacherPanel();
-        });
-
-        document.getElementById('close-teacher').addEventListener('click', () => {
-            this.hideTeacherPanel();
-        });
-
-        document.getElementById('teacher-overlay').addEventListener('click', () => {
-            this.hideTeacherPanel();
-        });
-
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const tabName = e.target.dataset.tab;
-                this.switchTeacherTab(tabName);
-            });
-        });
-    }
-
-    setupChat() {
-        const chatInput = document.getElementById('chat-input');
-        const sendButton = document.getElementById('send-message');
-        const quickQuestionButtons = document.querySelectorAll('.quick-question-btn');
-
-        sendButton.addEventListener('click', () => {
-            this.sendChatMessage();
-        });
-
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.sendChatMessage();
-            }
-        });
-
-        quickQuestionButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const question = e.target.dataset.question;
-                chatInput.value = question;
-                this.sendChatMessage();
-            });
-        });
-    }
-
-    sendChatMessage() {
-        const chatInput = document.getElementById('chat-input');
-        const message = chatInput.value.trim();
-
-        if (!message) return;
-
-        this.addChatMessage(message, 'user');
-
-        const answer = this.findAnswer(message);
-        
-        setTimeout(() => {
-            this.addChatMessage(answer, 'teacher');
-        }, 1000);
-
-        chatInput.value = '';
-    }
-
-    addChatMessage(text, sender) {
-        const chatMessages = document.getElementById('chat-messages');
-        const messageDiv = document.createElement('div');
-        
-        messageDiv.className = `message ${sender}-message`;
-        messageDiv.innerHTML = `
-            <div class="message-avatar">${sender === 'teacher' ? '🎓' : '👤'}</div>
-            <div class="message-content">
-                <div class="message-text">${text}</div>
-                <div class="message-time">${new Date().toLocaleTimeString()}</div>
-            </div>
-        `;
-
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    findAnswer(question) {
-        const lowerQuestion = question.toLowerCase();
-
-        for (const category in this.teacherKnowledge) {
-            for (const item of this.teacherKnowledge[category]) {
-                if (lowerQuestion.includes(item.question) || item.question.includes(lowerQuestion)) {
-                    return item.answer;
-                }
-            }
-        }
-
-        const defaultAnswers = [
-            "🤔 Интересный вопрос! В трейдинге важно помнить, что успех приходит с опытом и дисциплиной. Начните с изучения основ и всегда торгуйте по плану.",
-            "💡 Хороший вопрос! Основное правило: никогда не рискуйте больше, чем можете позволить себе потерять. Управление рисками - ключ к долгосрочному успеху.",
-            "🎯 Важный момент! Помните, что эмоции - главный враг трейдера. Торгуйте по системе, а не под влиянием настроения.",
-            "📚 Отличный вопрос для начинающего! Рекомендую начать с изучения технического анализа: свечные паттерны, поддержка/сопротивление, скользящие средние.",
-            "⚡ В трейдинге важно постоянно учиться. Начните с демо-счета, изучите анализ, разработайте стратегию и только потом переходите на реальные деньги."
-        ];
-
-        return defaultAnswers[Math.floor(Math.random() * defaultAnswers.length)];
-    }
-
-    showTeacherPanel() {
-        document.getElementById('teacher-panel').classList.add('active');
-        document.getElementById('teacher-overlay').classList.add('active');
-    }
-
-    hideTeacherPanel() {
-        document.getElementById('teacher-panel').classList.remove('active');
-        document.getElementById('teacher-overlay').classList.remove('active');
-    }
-
-    switchTeacherTab(tabName) {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-        document.getElementById(`${tabName}-content`).classList.add('active');
     }
 
     initChart() {
@@ -483,15 +287,21 @@ class TradingApp {
         };
     }
 
-    executeTrade(action, asset, amount = null) {
+    executeTrade(action, asset, isMaxTrade = false) {
         const amountInput = document.getElementById('trade-amount');
-        let tradeAmount = amount;
+        let amount = parseFloat(amountInput.value);
         
-        if (tradeAmount === null) {
-            tradeAmount = parseFloat(amountInput.value);
+        if (isMaxTrade) {
+            if (action === 'BUY') {
+                // Максимальная покупка на весь баланс
+                amount = this.state.balance;
+            } else {
+                // Максимальная продажа всего актива
+                amount = this.state.portfolio[asset] || 0;
+            }
         }
         
-        if (isNaN(tradeAmount) || tradeAmount <= 0) {
+        if (isNaN(amount) || amount <= 0) {
             this.showAlert('Введите корректную сумму!', 'error');
             amountInput.focus();
             return;
@@ -501,15 +311,15 @@ class TradingApp {
         let message = '';
 
         if (action === 'BUY') {
-            const amountBought = tradeAmount / price;
-            if (tradeAmount > this.state.balance) {
+            const amountBought = amount / price;
+            if (amount > this.state.balance) {
                 this.showAlert('Недостаточно средств на балансе!', 'error');
                 return;
             }
             
-            this.state.balance -= tradeAmount;
+            this.state.balance -= amount;
             this.state.portfolio[asset] = (this.state.portfolio[asset] || 0) + amountBought;
-            message = `✅ Куплено ${amountBought.toFixed(6)} ${asset} за ${tradeAmount.toFixed(2)} USDT`;
+            message = `✅ Куплено ${amountBought.toFixed(6)} ${asset} за ${amount.toFixed(2)} USDT`;
             
         } else {
             if (!this.state.portfolio[asset] || this.state.portfolio[asset] <= 0) {
@@ -517,50 +327,29 @@ class TradingApp {
                 return;
             }
             
-            if (amount === null && tradeAmount >= this.state.portfolio[asset]) {
-                tradeAmount = this.state.portfolio[asset];
-            }
-            
-            if (tradeAmount > this.state.portfolio[asset]) {
+            if (amount > this.state.portfolio[asset]) {
                 this.showAlert(`Нельзя продать больше ${this.state.portfolio[asset].toFixed(6)} ${asset}`, 'error');
                 return;
             }
             
-            const total = tradeAmount * price;
+            const total = amount * price;
             this.state.balance += total;
-            this.state.portfolio[asset] -= tradeAmount;
-            message = `🔴 Продано ${tradeAmount.toFixed(6)} ${asset} за ${total.toFixed(2)} USDT`;
+            this.state.portfolio[asset] -= amount;
+            message = `🔴 Продано ${amount.toFixed(6)} ${asset} за ${total.toFixed(2)} USDT`;
         }
 
         this.state.history.push({
             type: action,
             asset,
-            amount: tradeAmount,
+            amount,
             price,
-            total: action === 'BUY' ? tradeAmount : tradeAmount * price,
+            total: action === 'BUY' ? amount : amount * price,
             timestamp: new Date().toLocaleString()
         });
 
         this.showAlert(message, action === 'BUY' ? 'success' : 'error');
         this.updateUI();
         this.saveData();
-    }
-
-    sellAllAssets() {
-        const asset = document.getElementById('asset-select').value;
-        const assetAmount = this.state.portfolio[asset] || 0;
-        
-        if (assetAmount <= 0) {
-            this.showAlert(`У вас нет ${asset} для продажи!`, 'error');
-            return;
-        }
-
-        this.executeTrade('SELL', asset, assetAmount);
-    }
-
-    setMaxBuyAmount() {
-        const asset = document.getElementById('asset-select').value;
-        document.getElementById('trade-amount').value = this.state.balance.toFixed(2);
     }
 
     updateUI() {
@@ -635,12 +424,14 @@ class TradingApp {
             this.executeTrade('SELL', asset);
         });
 
-        document.getElementById('sell-all-btn').addEventListener('click', () => {
-            this.sellAllAssets();
+        document.getElementById('buy-max-btn').addEventListener('click', () => {
+            const asset = document.getElementById('asset-select').value;
+            this.executeTrade('BUY', asset, true);
         });
-
-        document.getElementById('max-buy-btn').addEventListener('click', () => {
-            this.setMaxBuyAmount();
+        
+        document.getElementById('sell-max-btn').addEventListener('click', () => {
+            const asset = document.getElementById('asset-select').value;
+            this.executeTrade('SELL', asset, true);
         });
 
         document.getElementById('asset-select').addEventListener('change', () => {
