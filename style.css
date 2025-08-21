@@ -1,4 +1,79 @@
-/* Добавьте эти стили в конец файла */
+:root {
+    --primary: #2962ff;
+    --primary-light: #768fff;
+    --profit: #00c853;
+    --loss: #ff1744;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --success-bg: #f0fdf4;
+    --error-bg: #fef2f2;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+}
+
+.app-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 2px 10px var(--shadow);
+}
+
+.header-left h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.header-left p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.balance-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.balance-amount {
+    font-size: 1.2rem;
+    margin-left: 8px;
+}
 
 .teacher-btn {
     padding: 10px 16px;
@@ -14,6 +89,222 @@
 .teacher-btn:hover {
     background: linear-gradient(135deg, #9b59b6, #8e44ad);
     transform: translateY(-2px);
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.chart-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.asset-select {
+    padding: 10px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    font-weight: 500;
+    min-width: 120px;
+}
+
+.timeframe-selector {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.timeframe-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.timeframe-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.price-display {
+    text-align: right;
+}
+
+.asset-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: block;
+}
+
+.price-change {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    margin-bottom: 16px;
+}
+
+#candleChart {
+    width: 100%;
+    height: 100%;
+}
+
+.chart-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-light);
+}
+
+.indicator-controls {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.indicator-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.indicator-checkbox:hover {
+    background: var(--border);
+}
+
+.indicator-checkbox input {
+    width: 16px;
+    height: 16px;
+}
+
+.trading-panel {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+}
+
+.trading-panel h3 {
+    margin-bottom: 16px;
+    color: var(--text);
+}
+
+.trade-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-weight: 500;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.trade-input {
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.trade-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.trade-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.trade-btn {
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.trade-btn span {
+    font-size: 1.1rem;
+}
+
+.trade-btn small {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.buy-btn {
+    background: var(--profit);
+    color: white;
+}
+
+.buy-btn:hover {
+    background: #00b248;
+    transform: translateY(-2px);
+}
+
+.sell-btn {
+    background: var(--loss);
+    color: white;
+}
+
+.sell-btn:hover {
+    background: #e01111;
+    transform: translateY(-2px);
+}
+
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .teacher-section {
@@ -115,8 +406,195 @@
     background: #00b248;
 }
 
-/* Адаптивность для учителя */
+.info-section, .portfolio-section, .history-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+}
+
+.info-section h3, .portfolio-section h3, .history-section h3 {
+    margin-bottom: 16px;
+    color: var(--text);
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.metric-card {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.metric-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 4px;
+}
+
+.metric-value {
+    display: block;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.portfolio-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.portfolio-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: 8px;
+}
+
+.portfolio-item span:first-child {
+    color: var(--text-light);
+}
+
+.portfolio-item span:last-child {
+    font-weight: 600;
+}
+
+.history-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.empty-history {
+    text-align: center;
+    color: var(--text-light);
+    padding: 20px;
+}
+
+.history-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    align-items: center;
+}
+
+.history-item.buy {
+    background: var(--success-bg);
+    border-left: 4px solid var(--profit);
+}
+
+.history-item.sell {
+    background: var(--error-bg);
+    border-left: 4px solid var(--loss);
+}
+
+.trade-type {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.trade-details {
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.trade-time {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    grid-column: 1 / -1;
+    text-align: right;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+.alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.saving-indicator {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: var(--primary);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.saving-indicator.visible {
+    opacity: 1;
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+    
+    .header-right {
+        justify-content: center;
+    }
+}
+
 @media (max-width: 768px) {
+    .app-container {
+        padding: 12px;
+    }
+    
+    .chart-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .trade-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+    
     .teacher-controls {
         grid-template-columns: 1fr;
     }
@@ -124,5 +602,23 @@
     .teacher-action-btn {
         font-size: 0.9rem;
         padding: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-left h1 {
+        font-size: 1.5rem;
+    }
+    
+    .balance-card {
+        padding: 12px 16px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .indicator-controls {
+        flex-direction: column;
     }
 }
