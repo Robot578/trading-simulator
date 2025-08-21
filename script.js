@@ -1,481 +1,290 @@
-class TradingApp {
-    constructor() {
-        this.state = {
-            balance: 100,
-            portfolio: { BTC: 0, ETH: 0, SOL: 0 },
-            prices: { BTC: 0, ETH: 0, SOL: 0 },
-            history: [],
-            chart: null,
-            candleSeries: null,
-            smaSeries: null,
-            emaSeries: null,
-            socket: null,
-            candles: [],
-            currentAsset: 'BTC',
-            timeframe: '1h'
+// Add this teacher functionality to your existing TradingApp class
+
+class TradingTeacher {
+    constructor(app) {
+        this.app = app;
+        this.lessons = [
+            {
+                id: 'basics',
+                title: 'Основы трейдинга',
+                completed: false,
+                content: `
+                    <h4>Основы трейдинга</h4>
+                    <p>Трейдинг - это покупка и продажа активов с целью получения прибыли. Основные понятия:</p>
+                    <ul>
+                        <li><strong>Long (покупка)</strong> - вы покупаете актив, ожидая роста его цены</li>
+                        <li><strong>Short (продажа)</strong> - вы продаете актив, ожидая падения его цены</li>
+                        <li><strong>Волатильность</strong> - степень изменения цены актива</li>
+                        <li><strong>Ликвидность</strong> - возможность быстро купить или продать актив</li>
+                    </ul>
+                    <div class="teacher-tip">
+                        <strong>Совет:</strong> Начинайте с небольших сумм и никогда не рискуйте больше, чем можете позволить себе потерять.
+                    </div>
+                `
+            },
+            {
+                id: 'chart-reading',
+                title: 'Чтение графиков',
+                completed: false,
+                content: `
+                    <h4>Как читать свечные графики</h4>
+                    <p>Японские свечи - самый популярный тип графиков в трейдинге. Каждая свеча показывает:</p>
+                    <ul>
+                        <li><strong>Тело свечи</strong> - разница между ценой открытия и закрытия</li>
+                        <li><strong>Зеленое тело</strong> - цена закрытия выше цены открытия (рост)</li>
+                        <li><strong>Красное тело</strong> - цена закрытия ниже цены открытия (падение)</li>
+                        <li><strong>Тени (фитили)</strong> - максимальная и минимальная цена за период</li>
+                    </ul>
+                    <div class="teacher-quiz">
+                        <p>Если свеча зеленая, это означает что:</p>
+                        <div class="quiz-options">
+                            <div class="quiz-option" data-correct="true">Цена закрытия выше цены открытия</div>
+                            <div class="quiz-option" data-correct="false">Цена закрытия ниже цены открытия</div>
+                            <div class="quiz-option" data-correct="false">Цена не изменилась</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'indicators',
+                title: 'Технические индикаторы',
+                completed: false,
+                content: `
+                    <h4>Технические индикаторы</h4>
+                    <p>Индикаторы помогают анализировать рынок и находить точки для входа в сделку.</p>
+                    
+                    <p><strong>SMA (Простая скользящая средняя)</strong> - показывает среднюю цену за определенный период. 
+                    Помогает определить тренд и потенциальные уровни поддержки/сопротивления.</p>
+                    
+                    <p><strong>EMA (Экспоненциальная скользящая средняя)</strong> - похожа на SMA, но больше веса придает 
+                    последним ценам, поэтому быстрее реагирует на изменения.</p>
+                    
+                    <div class="teacher-tip">
+                        <strong>Совет:</strong> Используйте несколько индикаторов для подтверждения сигналов, 
+                        но не перегружайте график - это может привести к путанице.
+                    </div>
+                `
+            },
+            {
+                id: 'risk-management',
+                title: 'Управление рисками',
+                completed: false,
+                content: `
+                    <h4>Управление рисками</h4>
+                    <p>Это самый важный аспект трейдинга! Правила управления рисками:</p>
+                    <ol>
+                        <li>Рискуйте не более 1-2% от депозита на одну сделку</li>
+                        <li>Всегда устанавливайте стоп-лосс (ордер на ограничение убытков)</li>
+                        <li>Соотношение прибыли к убыткам должно быть не менее 1:2</li>
+                        <li>Диверсифицируйте портфель</li>
+                    </ol>
+                    <div class="teacher-quiz">
+                        <p>Какой максимальный процент депозита рекомендуется рисковать в одной сделке?</p>
+                        <div class="quiz-options">
+                            <div class="quiz-option" data-correct="false">10%</div>
+                            <div class="quiz-option" data-correct="true">1-2%</div>
+                            <div class="quiz-option" data-correct="false">5%</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'psychology',
+                title: 'Психология трейдинга',
+                completed: false,
+                content: `
+                    <h4>Психология трейдинга</h4>
+                    <p>Эмоции - главный враг трейдера. Основные психологические ловушки:</p>
+                    <ul>
+                        <li><strong>Жадность</strong> - удерживание позиции слишком долго в надежде на большую прибыль</li>
+                        <li><strong>Страх</strong> - преждевременное закрытие прибыльной позиции</li>
+                        <li><strong>Месть</strong> - попытка сразу отыграться после убыточной сделки</li>
+                        <li><strong>Надежда</strong> - удерживание убыточной позиции в надежде на разворот</li>
+                    </ul>
+                    <div class="teacher-tip">
+                        <strong>Совет:</strong> Создайте торговый план и строго следуйте ему. 
+                        Торгуйте на основе анализа, а не эмоций.
+                    </div>
+                `
+            }
+        ];
+
+        this.concepts = {
+            sma: "SMA (Simple Moving Average) - простая скользящая средняя. Показывает среднюю цену актива за определенный период. Используется для определения тренда и потенциальных уровней поддержки/сопротивления.",
+            ema: "EMA (Exponential Moving Average) - экспоненциальная скользящая средняя. Похожа на SMA, но больше веса придает последним ценам, поэтому быстрее реагирует на изменения цены.",
+            long: "LONG (лонг) - позиция на покупку актива в ожидании роста его цены. Вы зарабатываете, когда цена актива увеличивается.",
+            short: "SHORT (шорт) - позиция на продажу актива в ожидании падения его цены. Вы зарабатываете, когда цена актива уменьшается."
         };
 
-        this.tg = window.Telegram?.WebApp;
-        
         this.init();
     }
 
-    async init() {
-        await this.loadSavedData();
-        this.initChart();
+    init() {
         this.setupEventListeners();
-        await this.loadInitialData();
-        this.updateUI();
-    }
-
-    async loadSavedData() {
-        try {
-            if (this.tg?.CloudStorage) {
-                const keys = ['balance', 'portfolio', 'history', 'prices'];
-                
-                for (const key of keys) {
-                    this.tg.CloudStorage.getItem(key, (err, data) => {
-                        if (!err && data) {
-                            try {
-                                this.state[key] = JSON.parse(data);
-                            } catch (e) {
-                                console.error('Error parsing saved data:', e);
-                            }
-                        }
-                    });
-                }
-            }
-            
-            const savedBalance = localStorage.getItem('tradeBalance');
-            const savedPortfolio = localStorage.getItem('tradePortfolio');
-            const savedHistory = localStorage.getItem('tradeHistory');
-            const savedPrices = localStorage.getItem('tradePrices');
-
-            if (savedBalance) this.state.balance = parseFloat(savedBalance);
-            if (savedPortfolio) this.state.portfolio = JSON.parse(savedPortfolio);
-            if (savedHistory) this.state.history = JSON.parse(savedHistory);
-            if (savedPrices) this.state.prices = JSON.parse(savedPrices);
-
-        } catch (error) {
-            console.error('Error loading saved data:', error);
-        }
-    }
-
-    async saveData() {
-        try {
-            const dataToSave = {
-                balance: this.state.balance,
-                portfolio: this.state.portfolio,
-                history: this.state.history,
-                prices: this.state.prices
-            };
-
-            if (this.tg?.CloudStorage) {
-                Object.keys(dataToSave).forEach(key => {
-                    this.tg.CloudStorage.setItem(key, JSON.stringify(dataToSave[key]), (err) => {
-                        if (err) {
-                            this.saveToLocalStorage(dataToSave);
-                        }
-                    });
-                });
-            } else {
-                this.saveToLocalStorage(dataToSave);
-            }
-
-        } catch (error) {
-            console.error('Error saving data:', error);
-            this.saveToLocalStorage({
-                balance: this.state.balance,
-                portfolio: this.state.portfolio,
-                history: this.state.history,
-                prices: this.state.prices
-            });
-        }
-    }
-
-    saveToLocalStorage(data) {
-        localStorage.setItem('tradeBalance', data.balance.toString());
-        localStorage.setItem('tradePortfolio', JSON.stringify(data.portfolio));
-        localStorage.setItem('tradeHistory', JSON.stringify(data.history));
-        localStorage.setItem('tradePrices', JSON.stringify(data.prices));
-    }
-
-    initChart() {
-        const chartContainer = document.getElementById('candleChart');
-        chartContainer.innerHTML = '';
-
-        this.state.chart = LightweightCharts.createChart(chartContainer, {
-            width: chartContainer.clientWidth,
-            height: chartContainer.clientHeight,
-            layout: {
-                backgroundColor: '#ffffff',
-                textColor: '#1e293b',
-                fontSize: 12
-            },
-            grid: {
-                vertLines: { color: '#e2e8f0' },
-                horzLines: { color: '#e2e8f0' }
-            },
-            timeScale: {
-                timeVisible: true,
-                secondsVisible: false,
-                borderColor: '#e2e8f0'
-            },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal
-            }
-        });
-
-        this.state.candleSeries = this.state.chart.addCandlestickSeries({
-            upColor: '#00c853',
-            downColor: '#ff1744',
-            borderDownColor: '#ff1744',
-            borderUpColor: '#00c853',
-            wickDownColor: '#ff1744',
-            wickUpColor: '#00c853',
-            borderVisible: true,
-            wickVisible: true
-        });
-
-        this.state.smaSeries = this.state.chart.addLineSeries({
-            color: '#2962ff',
-            lineWidth: 2,
-            lineStyle: 0,
-            title: 'SMA 20'
-        });
-
-        this.state.emaSeries = this.state.chart.addLineSeries({
-            color: '#ff6d00',
-            lineWidth: 2,
-            lineStyle: 0,
-            title: 'EMA 12'
-        });
-
-        document.getElementById('chartLoader').style.display = 'none';
-    }
-
-    async loadInitialData() {
-        const asset = document.getElementById('asset-select').value;
-        this.state.currentAsset = asset;
-        await this.fetchCandles(asset);
-        this.connectWebSocket();
-        this.updateIndicators();
-    }
-
-    async fetchCandles(asset) {
-        const symbol = `${asset}USDT`;
-        const interval = this.state.timeframe;
-        
-        try {
-            document.getElementById('chartLoader').style.display = 'block';
-            
-            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=100`);
-            const data = await response.json();
-
-            this.state.candles = data.map(item => ({
-                time: item[0] / 1000,
-                open: parseFloat(item[1]),
-                high: parseFloat(item[2]),
-                low: parseFloat(item[3]),
-                close: parseFloat(item[4]),
-                volume: parseFloat(item[5])
-            }));
-
-            this.state.candleSeries.setData(this.state.candles);
-            
-            const lastCandle = this.state.candles[this.state.candles.length - 1];
-            this.state.prices[asset] = lastCandle.close;
-            
-            this.updateMetrics(data);
-            
-            document.getElementById('current-price').textContent = lastCandle.close.toFixed(2);
-            document.getElementById('price-change').textContent = '+0.00%';
-            document.getElementById('price-change').style.color = '#00c853';
-            
-            document.getElementById('chartLoader').style.display = 'none';
-            
-        } catch (error) {
-            console.error("Ошибка загрузки данных:", error);
-            document.getElementById('chartLoader').textContent = "Ошибка загрузки данных";
-        }
-    }
-
-    updateMetrics(data) {
-        const volumes = data.map(item => parseFloat(item[5]));
-        const highs = data.map(item => parseFloat(item[2]));
-        const lows = data.map(item => parseFloat(item[3]));
-        const closes = data.map(item => parseFloat(item[4]));
-
-        const totalVolume = volumes.reduce((sum, vol) => sum + vol, 0);
-        const maxHigh = Math.max(...highs);
-        const minLow = Math.min(...lows);
-        const priceChange = ((closes[closes.length - 1] - closes[0]) / closes[0]) * 100;
-
-        document.getElementById('volume-24h').textContent = totalVolume.toFixed(0);
-        document.getElementById('high-24h').textContent = maxHigh.toFixed(2);
-        document.getElementById('low-24h').textContent = minLow.toFixed(2);
-        document.getElementById('change-24h').textContent = priceChange.toFixed(2) + '%';
-        document.getElementById('change-24h').style.color = priceChange >= 0 ? '#00c853' : '#ff1744';
-    }
-
-    updateIndicators() {
-        if (document.getElementById('sma-toggle').checked) {
-            const smaData = this.calculateSMA(this.state.candles.map(c => c.close), 20);
-            this.state.smaSeries.setData(smaData);
-            this.state.smaSeries.applyOptions({ visible: true });
-        } else {
-            this.state.smaSeries.applyOptions({ visible: false });
-        }
-
-        if (document.getElementById('ema-toggle').checked) {
-            const emaData = this.calculateEMA(this.state.candles.map(c => c.close), 12);
-            this.state.emaSeries.setData(emaData);
-            this.state.emaSeries.applyOptions({ visible: true });
-        } else {
-            this.state.emaSeries.applyOptions({ visible: false });
-        }
-    }
-
-    calculateSMA(data, period) {
-        const result = [];
-        for (let i = period - 1; i < data.length; i++) {
-            const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
-            result.push({ time: this.state.candles[i].time, value: sum / period });
-        }
-        return result;
-    }
-
-    calculateEMA(data, period) {
-        const k = 2 / (period + 1);
-        const result = [{ time: this.state.candles[period - 1].time, value: data.slice(0, period).reduce((a, b) => a + b, 0) / period }];
-        
-        for (let i = period; i < data.length; i++) {
-            const ema = data[i] * k + result[result.length - 1].value * (1 - k);
-            result.push({ time: this.state.candles[i].time, value: ema });
-        }
-        return result;
-    }
-
-    connectWebSocket() {
-        if (this.state.socket) {
-            this.state.socket.close();
-        }
-
-        const asset = this.state.currentAsset;
-        const symbol = `${asset}USDT`.toLowerCase();
-
-        this.state.socket = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@ticker`);
-
-        this.state.socket.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                const price = parseFloat(data.c);
-                const change = parseFloat(data.P);
-                const volume = parseFloat(data.v);
-
-                this.state.prices[asset] = price;
-                
-                document.getElementById('current-price').textContent = price.toFixed(2);
-                document.getElementById('price-change').textContent = `${change > 0 ? '+' : ''}${change.toFixed(2)}%`;
-                document.getElementById('price-change').style.color = change >= 0 ? '#00c853' : '#ff1744';
-                
-                document.getElementById('volume-24h').textContent = volume.toFixed(0);
-                
-            } catch (error) {
-                console.error("Ошибка обработки WebSocket сообщения:", error);
-            }
-        };
-    }
-
-    executeTrade(action, asset, isMaxTrade = false) {
-        const amountInput = document.getElementById('trade-amount');
-        let amount = parseFloat(amountInput.value);
-        
-        if (isMaxTrade) {
-            if (action === 'BUY') {
-                // Максимальная покупка на весь баланс
-                amount = this.state.balance;
-            } else {
-                // Максимальная продажа всего актива
-                amount = this.state.portfolio[asset] || 0;
-            }
-        }
-        
-        if (isNaN(amount) || amount <= 0) {
-            this.showAlert('Введите корректную сумму!', 'error');
-            amountInput.focus();
-            return;
-        }
-
-        const price = this.state.prices[asset];
-        let message = '';
-
-        if (action === 'BUY') {
-            const amountBought = amount / price;
-            if (amount > this.state.balance) {
-                this.showAlert('Недостаточно средств на балансе!', 'error');
-                return;
-            }
-            
-            this.state.balance -= amount;
-            this.state.portfolio[asset] = (this.state.portfolio[asset] || 0) + amountBought;
-            message = `✅ Куплено ${amountBought.toFixed(6)} ${asset} за ${amount.toFixed(2)} USDT`;
-            
-        } else {
-            if (!this.state.portfolio[asset] || this.state.portfolio[asset] <= 0) {
-                this.showAlert(`Недостаточно ${asset} для продажи!`, 'error');
-                return;
-            }
-            
-            if (amount > this.state.portfolio[asset]) {
-                this.showAlert(`Нельзя продать больше ${this.state.portfolio[asset].toFixed(6)} ${asset}`, 'error');
-                return;
-            }
-            
-            const total = amount * price;
-            this.state.balance += total;
-            this.state.portfolio[asset] -= amount;
-            message = `🔴 Продано ${amount.toFixed(6)} ${asset} за ${total.toFixed(2)} USDT`;
-        }
-
-        this.state.history.push({
-            type: action,
-            asset,
-            amount,
-            price,
-            total: action === 'BUY' ? amount : amount * price,
-            timestamp: new Date().toLocaleString()
-        });
-
-        this.showAlert(message, action === 'BUY' ? 'success' : 'error');
-        this.updateUI();
-        this.saveData();
-    }
-
-    updateUI() {
-        document.getElementById('balance').textContent = this.state.balance.toFixed(2) + ' USDT';
-        document.getElementById('btc-amount').textContent = (this.state.portfolio.BTC || 0).toFixed(6);
-        document.getElementById('eth-amount').textContent = (this.state.portfolio.ETH || 0).toFixed(6);
-        document.getElementById('sol-amount').textContent = (this.state.portfolio.SOL || 0).toFixed(6);
-        
-        let totalValue = this.state.balance;
-        Object.keys(this.state.portfolio).forEach(asset => {
-            totalValue += (this.state.portfolio[asset] || 0) * (this.state.prices[asset] || 0);
-        });
-        document.getElementById('total-value').textContent = totalValue.toFixed(2) + ' USDT';
-        
-        this.updateHistory();
-    }
-
-    updateHistory() {
-        const container = document.getElementById('history-items');
-        container.innerHTML = '';
-        
-        if (this.state.history.length === 0) {
-            container.innerHTML = '<div class="empty-history">Сделок пока нет</div>';
-            return;
-        }
-        
-        this.state.history.slice().reverse().forEach(trade => {
-            const item = document.createElement('div');
-            item.className = `history-item ${trade.type.toLowerCase()}`;
-            item.innerHTML = `
-                <div class="trade-type">${trade.type === 'BUY' ? '🟢 Куплено' : '🔴 Продано'} ${trade.asset}</div>
-                <div class="trade-details">${trade.amount.toFixed(6)} @ ${trade.price.toFixed(2)}</div>
-                <div class="trade-time">${trade.timestamp}</div>
-            `;
-            container.appendChild(item);
-        });
-    }
-
-    showAlert(message, type = 'info') {
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type}`;
-        alert.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 20px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            animation: slideIn 0.3s ease;
-            background: ${type === 'success' ? '#00c853' : type === 'error' ? '#ff1744' : '#2962ff'};
-        `;
-        alert.textContent = message;
-        document.body.appendChild(alert);
-        
-        setTimeout(() => {
-            alert.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => alert.remove(), 300);
-        }, 4000);
+        this.renderLessons();
+        this.showContextHint('welcome');
     }
 
     setupEventListeners() {
-        document.getElementById('buy-btn').addEventListener('click', () => {
-            const asset = document.getElementById('asset-select').value;
-            this.executeTrade('BUY', asset);
-        });
-        
-        document.getElementById('sell-btn').addEventListener('click', () => {
-            const asset = document.getElementById('asset-select').value;
-            this.executeTrade('SELL', asset);
+        document.getElementById('teacher-btn').addEventListener('click', () => {
+            document.getElementById('teacher-panel').classList.toggle('active');
         });
 
-        document.getElementById('buy-max-btn').addEventListener('click', () => {
-            const asset = document.getElementById('asset-select').value;
-            this.executeTrade('BUY', asset, true);
-        });
-        
-        document.getElementById('sell-max-btn').addEventListener('click', () => {
-            const asset = document.getElementById('asset-select').value;
-            this.executeTrade('SELL', asset, true);
+        document.getElementById('close-teacher').addEventListener('click', () => {
+            document.getElementById('teacher-panel').classList.remove('active');
         });
 
-        document.getElementById('asset-select').addEventListener('change', () => {
-            this.loadInitialData();
+        document.getElementById('hint-close').addEventListener('click', () => {
+            document.getElementById('teacher-hint').style.display = 'none';
         });
 
-        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+        // Info buttons for concepts
+        document.querySelectorAll('.info-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                this.state.timeframe = e.target.dataset.tf;
-                this.loadInitialData();
+                const concept = e.target.dataset.concept;
+                this.showConceptExplanation(concept, e.target);
             });
         });
+    }
 
-        document.getElementById('sma-toggle').addEventListener('change', () => {
-            this.updateIndicators();
+    renderLessons() {
+        const lessonsContainer = document.getElementById('lessons-list');
+        lessonsContainer.innerHTML = '';
+        
+        this.lessons.forEach(lesson => {
+            const lessonElement = document.createElement('div');
+            lessonElement.className = `lesson-item ${lesson.completed ? 'completed' : ''}`;
+            lessonElement.dataset.id = lesson.id;
+            lessonElement.innerHTML = lesson.title;
+            lessonElement.addEventListener('click', () => this.showLesson(lesson.id));
+            lessonsContainer.appendChild(lessonElement);
         });
+    }
 
-        document.getElementById('ema-toggle').addEventListener('change', () => {
-            this.updateIndicators();
-        });
-
-        document.getElementById('trade-amount').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const asset = document.getElementById('asset-select').value;
-                this.executeTrade('BUY', asset);
-            }
-        });
-
-        window.addEventListener('beforeunload', () => {
-            this.saveData();
-        });
-
-        if (this.tg) {
-            this.tg.onEvent('viewportChanged', (e) => {
-                if (!e.isExpanded) {
-                    this.saveData();
+    showLesson(lessonId) {
+        const lesson = this.lessons.find(l => l.id === lessonId);
+        if (!lesson) return;
+        
+        const lessonContainer = document.getElementById('current-lesson');
+        lessonContainer.innerHTML = `<div class="lesson-content">${lesson.content}</div>`;
+        
+        // Add event listeners for quiz options
+        lessonContainer.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const isCorrect = e.target.dataset.correct === 'true';
+                e.target.classList.add(isCorrect ? 'correct' : 'incorrect');
+                
+                if (isCorrect) {
+                    lesson.completed = true;
+                    this.renderLessons();
+                    setTimeout(() => {
+                        this.showContextHint('lesson_completed');
+                    }, 1000);
                 }
             });
+        });
+        
+        // Update active lesson
+        document.querySelectorAll('.lesson-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`.lesson-item[data-id="${lessonId}"]`).classList.add('active');
+    }
+
+    showContextHint(context) {
+        const hintElement = document.getElementById('teacher-hint');
+        const hintText = document.getElementById('hint-text');
+        
+        const hints = {
+            welcome: "Добро пожаловать! Нажмите на кнопку 'Учитель' для начала обучения.",
+            first_trade: "Отлично! Вы совершили первую сделку. Изучите урок 'Управление рисками'.",
+            lesson_completed: "Поздравляем! Вы завершили урок. Переходите к следующему!",
+            big_loss: "Кажется, вы понесли большие убытки. Изучите урок 'Управление рисками'.",
+            big_profit: "Отличная прибыль! Не забывайте о правилах управления рисками."
+        };
+        
+        hintText.textContent = hints[context] || "Воспользуйтесь учебными материалами для улучшения навыков!";
+        hintElement.style.display = 'flex';
+        
+        setTimeout(() => {
+            hintElement.style.display = 'none';
+        }, 5000);
+    }
+
+    showConceptExplanation(concept, targetElement) {
+        // Remove any existing explanation
+        const existingExplanation = document.querySelector('.concept-explanation');
+        if (existingExplanation) {
+            existingExplanation.remove();
+        }
+        
+        const explanation = document.createElement('div');
+        explanation.className = 'concept-explanation';
+        explanation.innerHTML = `<p>${this.concepts[concept]}</p>`;
+        
+        document.body.appendChild(explanation);
+        
+        // Position near the button
+        const rect = targetElement.getBoundingClientRect();
+        explanation.style.top = `${rect.bottom + window.scrollY}px`;
+        explanation.style.left = `${rect.left + window.scrollX}px`;
+        explanation.classList.add('visible');
+        
+        // Close on click outside
+        setTimeout(() => {
+            document.addEventListener('click', function closeExplanation(e) {
+                if (!explanation.contains(e.target) && e.target !== targetElement) {
+                    explanation.remove();
+                    document.removeEventListener('click', closeExplanation);
+                }
+            });
+        }, 100);
+    }
+
+    trackUserAction(action, data) {
+        switch(action) {
+            case 'trade':
+                if (data.amount > this.app.state.balance * 0.1) {
+                    this.showContextHint('big_loss');
+                }
+                break;
+            case 'profit':
+                if (data.profit > this.app.state.balance * 0.2) {
+                    this.showContextHint('big_profit');
+                }
+                break;
+            case 'loss':
+                if (data.loss > this.app.state.balance * 0.15) {
+                    this.showContextHint('big_loss');
+                }
+                break;
         }
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    new TradingApp();
-});
+// Modify the TradingApp class to integrate the teacher
+class TradingApp {
+    constructor() {
+        // ... existing code ...
+        
+        this.teacher = new TradingTeacher(this);
+        
+        // ... rest of existing code ...
+    }
+
+    // Modify executeTrade method to track user actions
+    executeTrade(action, asset, isMaxTrade = false) {
+        // ... existing code ...
+        
+        // Track the trade for educational purposes
+        this.teacher.trackUserAction('trade', {
+            amount: amount,
+            asset: asset,
+            type: action
+        });
+        
+        // ... rest of existing code ...
+    }
+
+    // ... rest of existing code ...
+}
