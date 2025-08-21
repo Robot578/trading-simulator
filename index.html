@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradeLearn - Симулятор трейдинга с обучением</title>
+    <title>TradeLearn - Симулятор трейдинга</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
@@ -14,45 +14,16 @@
                 <h1>📈 TradeLearn</h1>
                 <p>Симулятор трейдинга для начинающих</p>
             </div>
-            <div class="header-center">
-                <button id="teacher-btn" class="teacher-btn">🎓 Учитель</button>
-            </div>
             <div class="header-right">
                 <div class="balance-card">
                     <span>Баланс:</span>
                     <span class="balance-amount" id="balance">100.00 USDT</span>
                 </div>
+                <button id="teacher-btn" class="teacher-btn">🎓 Учитель</button>
             </div>
         </header>
 
-        <div class="teacher-panel" id="teacher-panel">
-            <div class="teacher-header">
-                <h3>🎓 Тренер по трейдингу</h3>
-                <button class="close-teacher" id="close-teacher">×</button>
-            </div>
-            <div class="teacher-content">
-                <div class="lessons-list" id="lessons-list">
-                    <!-- Lessons will be loaded here -->
-                </div>
-                <div class="current-lesson" id="current-lesson">
-                    <div class="welcome-message">
-                        <h4>Добро пожаловать в TradeLearn!</h4>
-                        <p>Я ваш персональный тренер по трейдингу. Выберите урок из списка слева, чтобы начать обучение.</p>
-                        <div class="teacher-tip">
-                            <strong>Совет:</strong> Начните с урока "Основы чтения графиков"
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="teacher-hint" id="teacher-hint">
-            <span id="hint-text"></span>
-            <button class="hint-close" id="hint-close">×</button>
-        </div>
-
         <div class="main-content">
-            <!-- Left column remains the same -->
             <div class="left-column">
                 <div class="chart-section">
                     <div class="chart-header">
@@ -86,8 +57,6 @@
                             <input type="checkbox" id="ema-toggle">
                             <span>EMA (12)</span>
                         </label>
-                        <button class="info-btn" data-concept="sma">ℹ️</button>
-                        <button class="info-btn" data-concept="ema">ℹ️</button>
                     </div>
                 </div>
 
@@ -118,8 +87,32 @@
                 </div>
             </div>
 
-            <!-- Right column remains the same -->
             <div class="right-column">
+                <!-- Учитель по трейдингу -->
+                <div class="teacher-section" id="teacher-section" style="display: none;">
+                    <h3>🎓 Учитель по трейдингу</h3>
+                    <div class="teacher-content">
+                        <div class="teacher-message" id="teacher-message">
+                            Добро пожаловать! Я помогу вам освоить основы трейдинга.
+                        </div>
+                        <div class="teacher-controls">
+                            <button id="teacher-hint" class="teacher-action-btn">💡 Подсказка</button>
+                            <button id="teacher-analysis" class="teacher-action-btn">📊 Анализ</button>
+                            <button id="teacher-lesson" class="teacher-action-btn">📚 Урок</button>
+                        </div>
+                        <div class="teacher-lessons" id="teacher-lessons" style="display: none;">
+                            <h4>Выберите тему:</h4>
+                            <select id="lesson-select" class="lesson-select">
+                                <option value="basics">Основы трейдинга</option>
+                                <option value="indicators">Технические индикаторы</option>
+                                <option value="risk">Управление рисками</option>
+                                <option value="psychology">Психология трейдинга</option>
+                            </select>
+                            <button id="start-lesson" class="start-lesson-btn">Начать урок</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="info-section">
                     <h3>📊 Основные показатели</h3>
                     <div class="metrics-grid">
