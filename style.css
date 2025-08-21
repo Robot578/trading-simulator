@@ -1,227 +1,128 @@
-/* Add these new styles to your existing CSS */
-
-.header-center {
-    display: flex;
-    align-items: center;
-}
+/* Добавьте эти стили в конец файла */
 
 .teacher-btn {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
     color: white;
     border: none;
     border-radius: 8px;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.teacher-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
-}
-
-.teacher-panel {
-    position: fixed;
-    top: 0;
-    right: -400px;
-    width: 400px;
-    height: 100vh;
-    background: var(--card);
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    transition: right 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.teacher-panel.active {
-    right: 0;
-}
-
-.teacher-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid var(--border);
-}
-
-.teacher-header h3 {
-    margin: 0;
-    color: #673ab7;
-}
-
-.close-teacher {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--text-light);
-}
-
-.teacher-content {
-    display: flex;
-    height: 100%;
-    overflow: hidden;
-}
-
-.lessons-list {
-    width: 40%;
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 10px 0;
-}
-
-.lesson-item {
-    padding: 12px 16px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.2s ease;
-}
-
-.lesson-item:hover {
-    background: var(--bg);
-}
-
-.lesson-item.active {
-    background: #f3e5f5;
-    border-right: 3px solid #9c27b0;
-    font-weight: 600;
-}
-
-.lesson-item.completed {
-    color: var(--profit);
-}
-
-.current-lesson {
-    width: 60%;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.lesson-content h4 {
-    color: #673ab7;
-    margin-bottom: 16px;
-}
-
-.lesson-content p {
-    margin-bottom: 16px;
-    line-height: 1.6;
-}
-
-.teacher-tip {
-    background: #e8f5e9;
-    padding: 12px 16px;
-    border-radius: 8px;
-    border-left: 4px solid var(--profit);
-    margin: 16px 0;
-}
-
-.teacher-quiz {
-    background: #e3f2fd;
-    padding: 16px;
-    border-radius: 8px;
-    margin: 16px 0;
-}
-
-.quiz-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 12px 0;
-}
-
-.quiz-option {
-    padding: 10px;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.quiz-option:hover {
-    background: #bbdefb;
+.teacher-btn:hover {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    transform: translateY(-2px);
 }
 
-.quiz-option.correct {
-    background: #c8e6c9;
-    border-color: var(--profit);
+.teacher-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
 }
 
-.quiz-option.incorrect {
-    background: #ffcdd2;
-    border-color: var(--loss);
+.teacher-section h3 {
+    margin-bottom: 16px;
+    color: var(--text);
+    text-align: center;
 }
 
-.teacher-hint {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #333;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    max-width: 300px;
-    z-index: 999;
+.teacher-content {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.hint-close {
-    background: none;
-    border: none;
-    color: white;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.info-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    color: var(--primary);
-    padding: 4px;
-}
-
-.concept-explanation {
-    position: absolute;
-    background: white;
-    border: 1px solid var(--border);
+.teacher-message {
+    background: var(--bg);
     padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.teacher-message.hint {
+    border-left-color: #f39c12;
+    background: #fff3e0;
+}
+
+.teacher-message.analysis {
+    border-left-color: #2980b9;
+    background: #e3f2fd;
+}
+
+.teacher-message.lesson {
+    border-left-color: #27ae60;
+    background: #e8f5e8;
+}
+
+.teacher-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.teacher-action-btn {
+    padding: 12px 8px;
+    border: none;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    max-width: 300px;
-    display: none;
+    background: var(--primary);
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
 }
 
-.concept-explanation.visible {
-    display: block;
+.teacher-action-btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
 }
 
+.teacher-lessons {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.lesson-select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    margin: 8px 0;
+    background: var(--card);
+}
+
+.start-lesson-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--profit);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.start-lesson-btn:hover {
+    background: #00b248;
+}
+
+/* Адаптивность для учителя */
 @media (max-width: 768px) {
-    .teacher-panel {
-        width: 100%;
-        right: -100%;
+    .teacher-controls {
+        grid-template-columns: 1fr;
     }
     
-    .teacher-content {
-        flex-direction: column;
-    }
-    
-    .lessons-list, .current-lesson {
-        width: 100%;
-        height: auto;
-    }
-    
-    .teacher-hint {
-        left: 20px;
-        right: 20px;
-        max-width: none;
+    .teacher-action-btn {
+        font-size: 0.9rem;
+        padding: 14px;
     }
 }
