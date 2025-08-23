@@ -167,6 +167,293 @@ class TradingTeacher {
     }
 }
 
+class RiskCalculator {
+    constructor(tradingApp) {
+        this.tradingApp = tradingApp;
+    }
+
+    calculate() {
+        const deposit = parseFloat(document.getElementById('risk-deposit').value);
+        const riskPercent = parseFloat(document.getElementById('risk-percent').value);
+        const entryPrice = parseFloat(document.getElementById('risk-entry').value);
+        const stopPrice = parseFloat(document.getElementById('risk-stop').value);
+
+        if (!deposit || !riskPercent || !entryPrice || !stopPrice) {
+            this.tradingApp.showAlert('Заполните все поля калькулятора!', 'error');
+            return;
+        }
+
+        const riskAmount = deposit * (riskPercent / 100);
+        const priceDifference = Math.abs(entryPrice - stopPrice);
+        const volume = riskAmount / priceDifference;
+
+        document.getElementById('risk-volume').textContent = volume.toFixed(6);
+        document.getElementById('risk-amount').textContent = riskAmount.toFixed(2) + ' USDT';
+
+        // Автоматически подставляем рассчитанный объем в поле торговли
+        document.getElementById('trade-amount').value = volume.toFixed(6);
+    }
+}
+
+class AchievementSystem {
+    constructor() {
+        this.achievements = [
+            {
+                id: 'first_trade',
+                title: 'Первая сделка',
+                description: 'Совершите вашу первую торговую операцию',
+                icon: '🎯',
+                unlocked: false
+            },
+            {
+                id: 'profit_10',
+                title: 'Профит +10%',
+                description: 'Достигните общей прибыли +10% от депозита',
+                icon: '💰',
+                unlocked: false
+            },
+            {
+                id: 'diversification',
+                title: 'Диверсификация',
+                description: 'Торгуйте тремя разными активами',
+                icon: '🌐',
+                unlocked: false
+            },
+            {
+                id: 'risk_manager',
+                title: 'Управление рисками',
+                description: 'Используйте калькулятор риска для 5 сделок',
+                icon: '🛡️',
+                unlocked: false
+            },
+            {
+                id: 'learning_complete',
+                title: 'Ученик трейдинга',
+                description: 'Пройдите все уроки в разделе обучения',
+                icon: '🎓',
+                unlocked: false
+            },
+            {
+                id: 'consistency',
+                title: 'Последовательность',
+                description: 'Совершите 10 сделок без серьезных убытков',
+                icon: '📈',
+                unlocked: false
+            }
+        ];
+        this.riskCalculatorUses = 0;
+    }
+
+    checkAchievements(tradingApp) {
+        this.checkFirstTrade(tradingApp);
+        this.checkProfitAchievement(tradingApp);
+        this.checkDiversification(tradingApp);
+        this.checkRiskManager();
+        this.checkLearningComplete();
+        this.checkConsistency(tradingApp);
+        this.saveAchievements();
+        this.displayAchievements();
+    }
+
+    checkFirstTrade(tradingApp) {
+        if (tradingApp.state.history.length > 0) {
+            this.unlockAchievement('first_trade');
+        }
+    }
+
+    checkProfitAchievement(tradingApp) {
+        const totalValue = this.calculateTotalValue(tradingApp);
+        const initialDeposit = 100;
+        const profitPercent = ((totalValue - initialDeposit) / initialDeposit) * 100;
+        
+        if (profitPercent >= 10) {
+            this.unlockAchievement('profit_10');
+        }
+    }
+
+    checkDiversification(tradingApp) {
+        const tradedAssets = new Set(tradingApp.state.history.map(trade => trade.asset));
+        if (tradedAssets.size >= 3) {
+            this.unlockAchievement('diversification');
+        }
+    }
+
+    checkRiskManager() {
+        if (this.riskCalculatorUses >= 5) {
+            this.unlockAchievement('risk_manager');
+        }
+    }
+
+    checkLearningComplete() {
+        const lessonsCompleted = localStorage.getItem('lessons_completed');
+        if (lessonsCompleted) {
+            this.unlockAchievement('learning_complete');
+        }
+    }
+
+    checkConsistency(tradingApp) {
+        if (tradingApp.state.history.length >= 10) {
+            const last10Trades = tradingApp.state.history.slice(-10);
+            const profitableTrades = last10Trades.filter(trade => {
+                const isBuy = trade.type === 'BUY';
+                const currentPrice = tradingApp.state.prices[trade.asset] || trade.price;
+                const profit = isBuy ? (currentPrice - trade.price) / trade.price : (trade.price - currentPrice) / trade.price;
+                return profit > -0.05; // Не более 5% убытка
+            });
+            
+            if (profitableTrades.length >= 8) {
+                this.unlockAchievement('consistency');
+            }
+        }
+    }
+
+    incrementRiskCalculatorUses() {
+        this.riskCalculatorUses++;
+        localStorage.setItem('risk_calculator_uses', this.riskCalculatorUses);
+        this.checkRiskManager();
+    }
+
+    unlockAchievement(achievementId) {
+        const achievement = this.achievements.find(a => a.id === achievementId);
+        if (achievement && !achievement.unlocked) {
+            achievement.unlocked = true;
+            this.showAchievementNotification(achievement);
+            return true;
+        }
+        return false;
+    }
+
+    showAchievementNotification(achievement) {
+        const notification = document.createElement('div');
+        notification.className = 'alert';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #2c3e50;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+            animation: slideIn 0.3s ease;
+            text-align: center;
+            max-width: 300px;
+        `;
+        notification.innerHTML = `
+            <div style="font-size: 2rem; margin-bottom: 8px;">${achievement.icon}</div>
+            <div style="font-weight: 600; margin-bottom: 4px; font-size: 1.1rem;">${achievement.title}</div>
+            <div style="font-size: 0.9rem;">${achievement.description}</div>
+        `;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+    }
+
+    displayAchievements() {
+        const container = document.getElementById('achievements-container');
+        if (!container) return;
+
+        container.innerHTML = this.achievements.map(achievement => `
+            <div class="achievement-card ${achievement.unlocked ? 'unlocked' : 'locked'}">
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-title">${achievement.title}</div>
+                <div class="achievement-desc">${achievement.description}</div>
+            </div>
+        `).join('');
+    }
+
+    calculateTotalValue(tradingApp) {
+        let totalValue = tradingApp.state.balance;
+        Object.keys(tradingApp.state.portfolio).forEach(asset => {
+            totalValue += (tradingApp.state.portfolio[asset] || 0) * (tradingApp.state.prices[asset] || 0);
+        });
+        return totalValue;
+    }
+
+    saveAchievements() {
+        const achievementsData = this.achievements.map(a => ({
+            id: a.id,
+            unlocked: a.unlocked
+        }));
+        localStorage.setItem('achievements', JSON.stringify(achievementsData));
+        localStorage.setItem('risk_calculator_uses', this.riskCalculatorUses);
+    }
+
+    loadAchievements() {
+        const saved = localStorage.getItem('achievements');
+        if (saved) {
+            const achievementsData = JSON.parse(saved);
+            achievementsData.forEach(savedAchievement => {
+                const achievement = this.achievements.find(a => a.id === savedAchievement.id);
+                if (achievement) {
+                    achievement.unlocked = savedAchievement.unlocked;
+                }
+            });
+        }
+        
+        const riskUses = localStorage.getItem('risk_calculator_uses');
+        if (riskUses) {
+            this.riskCalculatorUses = parseInt(riskUses);
+        }
+    }
+}
+
+class TradingJournal {
+    constructor(tradingApp) {
+        this.tradingApp = tradingApp;
+    }
+
+    updateStats() {
+        const trades = this.tradingApp.state.history;
+        const totalTrades = trades.length;
+        
+        if (totalTrades === 0) {
+            this.resetStats();
+            return;
+        }
+
+        const profitableTrades = trades.filter(trade => {
+            // Упрощенный расчет прибыльности
+            const isBuy = trade.type === 'BUY';
+            const currentPrice = this.tradingApp.state.prices[trade.asset] || trade.price;
+            return isBuy ? currentPrice > trade.price : currentPrice < trade.price;
+        });
+
+        const winRate = Math.round((profitableTrades.length / totalTrades) * 100);
+        const profitTrades = profitableTrades.map(trade => Math.abs(trade.total));
+        const lossTrades = trades.filter(trade => !profitableTrades.includes(trade)).map(trade => Math.abs(trade.total));
+
+        const avgProfit = profitTrades.length > 0 ? profitTrades.reduce((a, b) => a + b, 0) / profitTrades.length : 0;
+        const avgLoss = lossTrades.length > 0 ? lossTrades.reduce((a, b) => a + b, 0) / lossTrades.length : 0;
+
+        document.getElementById('total-trades').querySelector('.stat-value').textContent = totalTrades;
+        document.getElementById('win-rate').querySelector('.stat-value').textContent = winRate + '%';
+        document.getElementById('avg-profit').querySelector('.stat-value').textContent = avgProfit.toFixed(2);
+        document.getElementById('avg-loss').querySelector('.stat-value').textContent = avgLoss.toFixed(2);
+
+        // Добавляем классы для цветового оформления
+        document.getElementById('win-rate').className = `journal-stat ${winRate >= 50 ? 'positive' : 'negative'}`;
+        document.getElementById('avg-profit').className = 'journal-stat positive';
+        document.getElementById('avg-loss').className = 'journal-stat negative';
+    }
+
+    resetStats() {
+        document.getElementById('total-trades').querySelector('.stat-value').textContent = '0';
+        document.getElementById('win-rate').querySelector('.stat-value').textContent = '0%';
+        document.getElementById('avg-profit').querySelector('.stat-value').textContent = '0.00';
+        document.getElementById('avg-loss').querySelector('.stat-value').textContent = '0.00';
+        
+        document.getElementById('win-rate').className = 'journal-stat';
+        document.getElementById('avg-profit').className = 'journal-stat';
+        document.getElementById('avg-loss').className = 'journal-stat';
+    }
+}
+
 class TradingApp {
     constructor() {
         this.state = {
@@ -185,6 +472,9 @@ class TradingApp {
         };
 
         this.teacher = new TradingTeacher(this);
+        this.riskCalculator = new RiskCalculator(this);
+        this.achievementSystem = new AchievementSystem();
+        this.tradingJournal = new TradingJournal(this);
         this.tg = window.Telegram?.WebApp;
         
         this.init();
@@ -192,10 +482,13 @@ class TradingApp {
 
     async init() {
         await this.loadSavedData();
+        this.achievementSystem.loadAchievements();
         this.initChart();
         this.setupEventListeners();
         await this.loadInitialData();
         this.updateUI();
+        this.achievementSystem.displayAchievements();
+        this.tradingJournal.updateStats();
     }
 
     async loadSavedData() {
@@ -518,6 +811,8 @@ class TradingApp {
         this.showAlert(message, action === 'BUY' ? 'success' : 'error');
         this.updateUI();
         this.saveData();
+        this.achievementSystem.checkAchievements(this);
+        this.tradingJournal.updateStats();
     }
 
     updateUI() {
@@ -652,6 +947,29 @@ class TradingApp {
             this.teacher.startLesson(topic);
         });
 
+        // Обработчики для калькулятора риска
+        document.getElementById('calculate-risk').addEventListener('click', () => {
+            this.riskCalculator.calculate();
+            this.achievementSystem.incrementRiskCalculatorUses();
+        });
+
+        // Автозаполнение цены входа и стоп-лосса
+        document.getElementById('risk-entry').addEventListener('focus', () => {
+            const currentPrice = this.state.prices[this.state.currentAsset];
+            document.getElementById('risk-entry').value = currentPrice.toFixed(2);
+        });
+
+        document.getElementById('risk-stop').addEventListener('focus', () => {
+            const currentPrice = this.state.prices[this.state.currentAsset];
+            const stopPrice = currentPrice * 0.98;
+            document.getElementById('risk-stop').value = stopPrice.toFixed(2);
+        });
+
+        // Обработчик для дневника трейдера
+        document.getElementById('show-journal').addEventListener('click', () => {
+            this.showJournalDetails();
+        });
+
         window.addEventListener('beforeunload', () => {
             this.saveData();
         });
@@ -673,6 +991,36 @@ class TradingApp {
     toggleLessonsList() {
         const lessons = document.getElementById('teacher-lessons');
         lessons.style.display = lessons.style.display === 'none' ? 'block' : 'none';
+    }
+
+    showJournalDetails() {
+        const trades = this.state.history;
+        if (trades.length === 0) {
+            this.showAlert('Нет данных для анализа! Совершите несколько сделок.', 'info');
+            return;
+        }
+
+        let message = '📊 Детальная статистика:\n\n';
+        message += `Всего сделок: ${trades.length}\n`;
+        
+        const profitableTrades = trades.filter(trade => {
+            const isBuy = trade.type === 'BUY';
+            const currentPrice = this.state.prices[trade.asset] || trade.price;
+            return isBuy ? currentPrice > trade.price : currentPrice < trade.price;
+        });
+
+        const winRate = Math.round((profitableTrades.length / trades.length) * 100);
+        message += `Процент побед: ${winRate}%\n`;
+
+        const totalProfit = profitableTrades.reduce((sum, trade) => sum + Math.abs(trade.total), 0);
+        const totalLoss = trades.filter(trade => !profitableTrades.includes(trade))
+                               .reduce((sum, trade) => sum + Math.abs(trade.total), 0);
+        
+        message += `Общая прибыль: ${totalProfit.toFixed(2)} USDT\n`;
+        message += `Общий убыток: ${totalLoss.toFixed(2)} USDT\n`;
+        message += `Чистая прибыль: ${(totalProfit - totalLoss).toFixed(2)} USDT\n`;
+
+        this.showAlert(message, totalProfit > totalLoss ? 'success' : 'error');
     }
 }
 
