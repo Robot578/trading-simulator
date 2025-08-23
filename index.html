@@ -113,6 +113,98 @@
                     </div>
                 </div>
 
+                <!-- Калькулятор риска -->
+                <div class="risk-calculator-section">
+                    <h3>🧮 Калькулятор риска</h3>
+                    <div class="risk-inputs">
+                        <div class="input-group">
+                            <label>Размер депозита (USDT):</label>
+                            <input type="number" id="risk-deposit" class="trade-input" value="100">
+                        </div>
+                        <div class="input-group">
+                            <label>Риск на сделку (%):</label>
+                            <input type="number" id="risk-percent" class="trade-input" value="2" min="0.1" max="10" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Цена входа:</label>
+                            <input type="number" id="risk-entry" class="trade-input">
+                        </div>
+                        <div class="input-group">
+                            <label>Стоп-лосс:</label>
+                            <input type="number" id="risk-stop" class="trade-input">
+                        </div>
+                        <button id="calculate-risk" class="trade-btn" style="background: #2962ff;">
+                            Рассчитать позицию
+                        </button>
+                        <div class="risk-results" id="risk-results">
+                            <div class="risk-result">
+                                <span>Объем:</span>
+                                <span id="risk-volume">0.00</span>
+                            </div>
+                            <div class="risk-result">
+                                <span>Сумма риска:</span>
+                                <span id="risk-amount">0.00 USDT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Достижения -->
+                <div class="achievements-section">
+                    <h3>🏆 Достижения</h3>
+                    <div class="achievements-grid" id="achievements-container">
+                        <!-- Achievements will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Дневник трейдера -->
+                <div class="trading-journal-section">
+                    <h3>📊 Дневник трейдера</h3>
+                    <div class="journal-stats">
+                        <div class="journal-stat" id="total-trades">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">Всего сделок</span>
+                        </div>
+                        <div class="journal-stat" id="win-rate">
+                            <span class="stat-value">0%</span>
+                            <span class="stat-label">Процент побед</span>
+                        </div>
+                        <div class="journal-stat" id="avg-profit">
+                            <span class="stat-value">0.00</span>
+                            <span class="stat-label">Средняя прибыль</span>
+                        </div>
+                        <div class="journal-stat" id="avg-loss">
+                            <span class="stat-value">0.00</span>
+                            <span class="stat-label">Средний убыток</span>
+                        </div>
+                    </div>
+                    <button id="show-journal" class="trade-btn" style="background: #8e44ad;">
+                        📖 Открыть детальную статистику
+                    </button>
+                </div>
+
+                <!-- Экономический календарь -->
+                <div class="economic-calendar">
+                    <h3>📅 Экономический календарь</h3>
+                    <div class="calendar-items" id="calendar-items">
+                        <div class="calendar-item">
+                            <span class="calendar-time">14:30</span>
+                            <span class="calendar-event">CPI (Consumer Price Index)</span>
+                            <span class="calendar-impact impact-high"></span>
+                        </div>
+                        <div class="calendar-item">
+                            <span class="calendar-time">16:00</span>
+                            <span class="calendar-event">Fed Interest Rate Decision</span>
+                            <span class="calendar-impact impact-high"></span>
+                        </div>
+                        <div class="calendar-item">
+                            <span class="calendar-time">12:00</span>
+                            <span class="calendar-event">Unemployment Claims</span>
+                            <span class="calendar-impact impact-medium"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="info-section">
                     <h3>📊 Основные показатели</h3>
                     <div class="metrics-grid">
