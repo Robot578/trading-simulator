@@ -181,7 +181,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: var(--text-light);
+        color: var(--text-light);
 }
 
 .indicator-controls {
@@ -516,6 +516,190 @@ body {
     text-align: right;
 }
 
+/* Новые стили для добавленных компонентов */
+.risk-calculator-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.risk-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.risk-results {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 12px;
+}
+
+.risk-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.risk-result span:first-child {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.risk-result span:last-child {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.achievements-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.achievement-card {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.achievement-card.locked {
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+
+.achievement-card.unlocked {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+}
+
+.achievement-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.achievement-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.achievement-desc {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.trading-journal-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.journal-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.journal-stat {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.journal-stat.positive {
+    background: var(--success-bg);
+    border-left: 4px solid var(--profit);
+}
+
+.journal-stat.negative {
+    background: var(--error-bg);
+    border-left: 4px solid var(--loss);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.economic-calendar {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.calendar-items {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.calendar-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--bg);
+    border-radius: 8px;
+}
+
+.calendar-time {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    min-width: 60px;
+}
+
+.calendar-event {
+    flex: 1;
+    font-size: 0.9rem;
+    margin: 0 12px;
+}
+
+.calendar-impact {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.impact-high {
+    background: var(--loss);
+}
+
+.impact-medium {
+    background: #f39c12;
+}
+
+.impact-low {
+    background: var(--profit);
+}
+
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
@@ -603,6 +787,14 @@ body {
         font-size: 0.9rem;
         padding: 14px;
     }
+    
+    .achievements-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .journal-stats {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -620,5 +812,17 @@ body {
     
     .indicator-controls {
         flex-direction: column;
+    }
+    
+    .calendar-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .calendar-time,
+    .calendar-event,
+    .calendar-impact {
+        margin: 0;
     }
 }
