@@ -181,7 +181,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-        color: var(--text-light);
+    color: var(--text-light);
 }
 
 .indicator-controls {
@@ -354,7 +354,7 @@ body {
 
 .teacher-controls {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
 }
 
@@ -614,7 +614,7 @@ body {
 
 .journal-stats {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin-bottom: 16px;
 }
@@ -700,6 +700,129 @@ body {
     background: var(--profit);
 }
 
+/* Стили для словаря */
+.teacher-dictionary {
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 12px;
+}
+
+.dictionary-search {
+    margin-bottom: 12px;
+}
+
+.dictionary-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.dictionary-term {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--card);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dictionary-term:hover {
+    background: var(--primary-light);
+    color: white;
+}
+
+.term-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.term-desc {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.dictionary-term:hover .term-desc {
+    color: white;
+}
+
+/* Стили для объяснения терминов */
+.term-explanation {
+    background: var(--bg);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 16px;
+    border-left: 4px solid var(--primary);
+}
+
+.term-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--primary);
+}
+
+.term-definition {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.term-usage {
+    background: var(--card);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    border-left: 3px solid var(--profit);
+}
+
+.term-usage h5 {
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.term-example {
+    background: var(--card);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    border-left: 3px solid var(--primary-light);
+    margin-top: 8px;
+}
+
+.term-example h5 {
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+/* Интерактивные подсказки на графике */
+.chart-tooltip {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-width: 250px;
+    pointer-events: none;
+}
+
+.tooltip-term {
+    color: var(--primary);
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px dotted var(--primary);
+}
+
+.indicator-label {
+    cursor: help;
+    border-bottom: 1px dotted var(--text-light);
+}
+
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
@@ -754,6 +877,10 @@ body {
     
     .header-right {
         justify-content: center;
+    }
+    
+    .teacher-controls {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -824,5 +951,11 @@ body {
     .calendar-event,
     .calendar-impact {
         margin: 0;
+    }
+    
+    .dictionary-term {
+        flex-direction: column;
+        text-align: center;
+        gap: 4px;
     }
 }
