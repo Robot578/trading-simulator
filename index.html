@@ -51,11 +51,11 @@
                     <div class="indicator-controls">
                         <label class="indicator-checkbox">
                             <input type="checkbox" id="sma-toggle" checked>
-                            <span>SMA (20)</span>
+                            <span class="indicator-label">SMA (20)</span>
                         </label>
                         <label class="indicator-checkbox">
                             <input type="checkbox" id="ema-toggle">
-                            <span>EMA (12)</span>
+                            <span class="indicator-label">EMA (12)</span>
                         </label>
                     </div>
                 </div>
@@ -99,7 +99,9 @@
                             <button id="teacher-hint" class="teacher-action-btn">💡 Подсказка</button>
                             <button id="teacher-analysis" class="teacher-action-btn">📊 Анализ</button>
                             <button id="teacher-lesson" class="teacher-action-btn">📚 Урок</button>
+                            <button id="teacher-dictionary-btn" class="teacher-action-btn">📖 Словарь</button>
                         </div>
+                        
                         <div class="teacher-lessons" id="teacher-lessons" style="display: none;">
                             <h4>Выберите тему:</h4>
                             <select id="lesson-select" class="lesson-select">
@@ -109,6 +111,56 @@
                                 <option value="psychology">Психология трейдинга</option>
                             </select>
                             <button id="start-lesson" class="start-lesson-btn">Начать урок</button>
+                        </div>
+
+                        <!-- Словарь терминов -->
+                        <div class="teacher-dictionary" id="teacher-dictionary" style="display: none;">
+                            <h4>📚 Словарь трейдера</h4>
+                            <div class="dictionary-search">
+                                <input type="text" id="term-search" class="trade-input" placeholder="Поиск термина...">
+                            </div>
+                            <div class="dictionary-list">
+                                <div class="dictionary-term" data-term="rsi">
+                                    <span class="term-name">RSI</span>
+                                    <span class="term-desc">Индекс относительной силы</span>
+                                </div>
+                                <div class="dictionary-term" data-term="sma">
+                                    <span class="term-name">SMA</span>
+                                    <span class="term-desc">Простая скользящая средняя</span>
+                                </div>
+                                <div class="dictionary-term" data-term="ema">
+                                    <span class="term-name">EMA</span>
+                                    <span class="term-desc">Экспоненциальная скользящая средняя</span>
+                                </div>
+                                <div class="dictionary-term" data-term="macd">
+                                    <span class="term-name">MACD</span>
+                                    <span class="term-desc">Схождение/расхождение скользящих средних</span>
+                                </div>
+                                <div class="dictionary-term" data-term="bollinger">
+                                    <span class="term-name">Bollinger Bands</span>
+                                    <span class="term-desc">Полосы Боллинджера</span>
+                                </div>
+                                <div class="dictionary-term" data-term="support">
+                                    <span class="term-name">Support</span>
+                                    <span class="term-desc">Уровень поддержки</span>
+                                </div>
+                                <div class="dictionary-term" data-term="resistance">
+                                    <span class="term-name">Resistance</span>
+                                    <span class="term-desc">Уровень сопротивления</span>
+                                </div>
+                                <div class="dictionary-term" data-term="trend">
+                                    <span class="term-name">Trend</span>
+                                    <span class="term-desc">Тренд</span>
+                                </div>
+                                <div class="dictionary-term" data-term="volume">
+                                    <span class="term-name">Volume</span>
+                                    <span class="term-desc">Объем торгов</span>
+                                </div>
+                                <div class="dictionary-term" data-term="liquidity">
+                                    <span class="term-name">Liquidity</span>
+                                    <span class="term-desc">Ликвидность</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
