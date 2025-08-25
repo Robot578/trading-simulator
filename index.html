@@ -85,6 +85,36 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Новые секции -->
+                <div class="order-creation-section">
+                    <h3>📝 Создать ордер</h3>
+                    <div class="order-inputs">
+                        <div class="input-group">
+                            <label>Тип ордера:</label>
+                            <select id="order-type" class="trade-input">
+                                <option value="STOP">Стоп-лосс</option>
+                                <option value="TAKE_PROFIT">Тейк-профит</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Цена срабатывания:</label>
+                            <input type="number" id="order-price" class="trade-input" placeholder="Цена">
+                        </div>
+                        <div class="input-group">
+                            <label>Объем:</label>
+                            <input type="number" id="order-amount" class="trade-input" placeholder="Объем">
+                        </div>
+                        <button id="create-order-btn" class="trade-btn">🎯 Создать ордер</button>
+                    </div>
+                </div>
+
+                <div class="orders-section">
+                    <h3>🎯 Активные ордера</h3>
+                    <div class="orders-list" id="orders-container">
+                        <div class="empty-orders">Активных ордеров нет</div>
+                    </div>
+                </div>
             </div>
 
             <div class="right-column">
@@ -178,11 +208,11 @@
                             <input type="number" id="risk-percent" class="trade-input" value="2" min="0.1" max="10" step="0.1">
                         </div>
                         <div class="input-group">
-                            <label>Цена входа:</label>
+                            <label>Цена входа: <span id="risk-entry-quick" style="cursor: pointer; color: var(--primary);">(текущая)</span></label>
                             <input type="number" id="risk-entry" class="trade-input">
                         </div>
                         <div class="input-group">
-                            <label>Стоп-лосс:</label>
+                            <label>Стоп-лосс: <span id="risk-stop-quick" style="cursor: pointer; color: var(--primary);">(-2%)</span></label>
                             <input type="number" id="risk-stop" class="trade-input">
                         </div>
                         <button id="calculate-risk" class="trade-btn" style="background: #2962ff;">
@@ -231,29 +261,21 @@
                         </div>
                     </div>
                     <button id="show-journal" class="trade-btn" style="background: #8e44ad;">
-                        📖 Открыть детальную статистику
+                        📖 Статистика
+                    </button>
+                    <button id="show-advanced-stats" class="trade-btn" style="background: #27ae60; margin-top: 10px;">
+                        📈 Расширенная статистика
                     </button>
                 </div>
 
-                <!-- Экономический календарь -->
-                <div class="economic-calendar">
-                    <h3>📅 Экономический календарь</h3>
-                    <div class="calendar-items" id="calendar-items">
-                        <div class="calendar-item">
-                            <span class="calendar-time">14:30</span>
-                            <span class="calendar-event">CPI (Consumer Price Index)</span>
-                            <span class="calendar-impact impact-high"></span>
-                        </div>
-                        <div class="calendar-item">
-                            <span class="calendar-time">16:00</span>
-                            <span class="calendar-event">Fed Interest Rate Decision</span>
-                            <span class="calendar-impact impact-high"></span>
-                        </div>
-                        <div class="calendar-item">
-                            <span class="calendar-time">12:00</span>
-                            <span class="calendar-event">Unemployment Claims</span>
-                            <span class="calendar-impact impact-medium"></span>
-                        </div>
+                <!-- Управление данными -->
+                <div class="data-management-section">
+                    <h3>💾 Управление данными</h3>
+                    <div class="data-buttons">
+                        <button id="export-btn" class="trade-btn">📤 Экспорт данных</button>
+                        <label for="import-file" class="trade-btn">📥 Импорт данных</label>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                        <button id="reset-btn" class="trade-btn" style="background: #e74c3c;">🔄 Сбросить данные</button>
                     </div>
                 </div>
 
