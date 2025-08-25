@@ -23,7 +23,7 @@ class TradingTeacher {
                 "Диверсификация снижает риски - торгуй несколькими активами.",
                 "Веди статистику сделок для анализа ошибок."
             ],
-            psychology: [
+                        psychology: [
                 "Эмоции - главный враг трейдера. Действуй по плану.",
                 "Жадность и страх часто приводят к убыточным сделкам.",
                 "Веди дневник трейдера для анализа своих решений.",
@@ -74,11 +74,11 @@ class TradingTeacher {
                 name: "Support (Уровень поддержки)",
                 definition: "Ценовой уровень, где давление покупателей достаточно сильное, чтобы предотвратить дальнейшее падение цены.",
                 usage: "Используется для определения точек входа в long позиции или установки стоп-лоссов.",
-                example: "Если цена несколько раз отскакивает от определенного уровня, этот уровень становится поддержкой."
+                example: "Если цена несколько раз отскакивает от определенного уровень, этот уровень становится поддержкой."
             },
             resistance: {
                 name: "Resistance (Уровень сопротивления)",
-                definition: "Ценовой уровень, где давление продавцов достаточно сильное, чтобы предотвратить дальнейший рост цены.",
+                definition: "Ценовой уровень, где давление продавцов достаточно сильное, чтобы предотвратить дальнейший рост цей.",
                 usage: "Используется для определения точек входа в short позиции или тейк-профитов.",
                 example: "Если цена несколько раз не может пробить определенный уровень, этот уровень становится сопротивлением."
             },
@@ -91,7 +91,7 @@ class TradingTeacher {
             volume: {
                 name: "Volume (Объем торгов)",
                 definition: "Количество акций или контрактов, торгуемых в течение определенного период времени.",
-                                usage: "Подтверждает силу тренда. Высокий объем при движении цены подтверждает тренд, низкий объем может сигнализировать о слабости.",
+                usage: "Подтверждает силу тренда. Высокий объем при движении цены подтверждает тренд, низкий объем может сигнализировать о слабости.",
                 example: "Рост цены на высоком объеме - сильный бычий сигнал."
             },
             liquidity: {
@@ -380,6 +380,116 @@ class RiskCalculator {
             'lesson'
         );
     }
+
+    // Быстрый расчет с текущей ценой
+    quickCalculate() {
+        const currentPrice = this.tradingApp.state.prices[this.tradingApp.state.currentAsset];
+        const stopPrice = currentPrice * 0.98; // -2% для стоп-лосса
+        
+        document.getElementById('risk-entry').value = currentPrice.toFixed(2);
+        document.getElementById('risk-stop').value = stopPrice.toFixed(2);
+        
+        this.calculate();
+    }
+}
+
+class OrderManager {
+    constructor(tradingApp) {
+        this.tradingApp = tradingApp;
+    }
+
+    createOrder(type, asset, amount, triggerPrice, orderType = 'STOP') {
+        const order = {
+            id: Date.now() + Math.random().toString(36).substr(2, 9),
+            type: type,
+            asset: asset,
+            amount: amount,
+            triggerPrice: triggerPrice,
+            orderType: orderType,
+            status: 'ACTIVE',
+            createdAt: new Date().toLocaleString()
+        };
+        
+        this.tradingApp.state.orders.push(order);
+        this.tradingApp.saveData();
+        this.updateOrdersUI();
+        
+        this.tradingApp.showAlert(
+            `🎯 ${orderType === 'STOP' ? 'Стоп-лосс' : 'Тейк-профит'} ордер создан!`,
+            'info'
+        );
+    }
+
+    checkOrders() {
+        const currentPrice = this.tradingApp.state.prices[this.tradingApp.state.currentAsset];
+        
+        this.tradingApp.state.orders.forEach(order => {
+            if (order.status === 'ACTIVE') {
+                const shouldTrigger = order.orderType === 'STOP' ? 
+                    (order.type === 'BUY' ? currentPrice >= order.triggerPrice : currentPrice <= order.triggerPrice) :
+                    (order.type === 'BUY' ? currentPrice <= order.triggerPrice : currentPrice >= order.triggerPrice);
+                
+                if (shouldTrigger) {
+                    this.executeOrder(order);
+                }
+            }
+        });
+    }
+
+    executeOrder(order) {
+        order.status = 'FILLED';
+        this.tradingApp.executeTrade(order.type, order.asset, false, order.amount);
+        this.tradingApp.showAlert(
+            `✅ Ордер исполнен! ${order.type === 'BUY' ? 'Куплено' : 'Продано'} ${order.amount} ${order.asset} по ${order.triggerPrice}`,
+            'success'
+        );
+        this.updateOrdersUI();
+    }
+
+    cancelOrder(orderId) {
+        const orderIndex = this.tradingApp.state.orders.findIndex(o => o.id === orderId);
+        if (orderIndex !== -1) {
+            this.tradingApp.state.orders[orderIndex].status = 'CANCELLED';
+            this.tradingApp.saveData();
+            this.updateOrdersUI();
+            this.tradingApp.showAlert('❌ Ордер отменен', 'error');
+        }
+    }
+
+    updateOrdersUI() {
+        const container = document.getElementById('orders-container');
+        if (!container) return;
+
+        const activeOrders = this.tradingApp.state.orders.filter(o => o.status === 'ACTIVE');
+        
+        if (activeOrders.length === 0) {
+            container.innerHTML = '<div class="empty-orders">Активных ордеров нет</div>';
+            return;
+        }
+
+        container.innerHTML = activeOrders.map(order => `
+            <div class="order-item ${order.type.toLowerCase()}">
+                <div class="order-header">
+                    <span class="order-type">${order.type === 'BUY' ? '🟢 BUY' : '🔴 SELL'} ${order.asset}</span>
+                    <span class="order-price">${order.triggerPrice.toFixed(2)}</span>
+                    <button class="cancel-order-btn" data-order-id="${order.id}">❌</button>
+                </div>
+                <div class="order-details">
+                    <span>Объем: ${order.amount}</span>
+                    <span>Тип: ${order.orderType === 'STOP' ? 'Стоп-лосс' : 'Тейк-профит'}</span>
+                </div>
+                <div class="order-time">Создан: ${order.createdAt}</div>
+            </div>
+        `).join('');
+
+        // Добавляем обработчики для кнопок отмены
+        container.querySelectorAll('.cancel-order-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const orderId = e.target.dataset.orderId;
+                this.cancelOrder(orderId);
+            });
+        });
+    }
 }
 
 class AchievementSystem {
@@ -426,9 +536,17 @@ class AchievementSystem {
                 description: 'Совершите 10 сделок без серьезных убытков',
                 icon: '📈',
                 unlocked: false
+            },
+            {
+                id: 'order_master',
+                title: 'Мастер ордеров',
+                description: 'Создайте и исполните 5 отложенных ордеров',
+                icon: '🎯',
+                unlocked: false
             }
         ];
         this.riskCalculatorUses = 0;
+        this.ordersExecuted = 0;
     }
 
     checkAchievements(tradingApp) {
@@ -438,6 +556,7 @@ class AchievementSystem {
         this.checkRiskManager();
         this.checkLearningComplete();
         this.checkConsistency(tradingApp);
+        this.checkOrderMaster();
         this.saveAchievements();
         this.displayAchievements();
     }
@@ -494,10 +613,22 @@ class AchievementSystem {
         }
     }
 
+    checkOrderMaster() {
+        if (this.ordersExecuted >= 5) {
+            this.unlockAchievement('order_master');
+        }
+    }
+
     incrementRiskCalculatorUses() {
         this.riskCalculatorUses++;
         localStorage.setItem('risk_calculator_uses', this.riskCalculatorUses);
         this.checkRiskManager();
+    }
+
+    incrementOrdersExecuted() {
+        this.ordersExecuted++;
+        localStorage.setItem('orders_executed', this.ordersExecuted);
+        this.checkOrderMaster();
     }
 
     unlockAchievement(achievementId) {
@@ -569,6 +700,7 @@ class AchievementSystem {
         }));
         localStorage.setItem('achievements', JSON.stringify(achievementsData));
         localStorage.setItem('risk_calculator_uses', this.riskCalculatorUses);
+        localStorage.setItem('orders_executed', this.ordersExecuted);
     }
 
     loadAchievements() {
@@ -586,6 +718,11 @@ class AchievementSystem {
         const riskUses = localStorage.getItem('risk_calculator_uses');
         if (riskUses) {
             this.riskCalculatorUses = parseInt(riskUses);
+        }
+        
+        const ordersExecuted = localStorage.getItem('orders_executed');
+        if (ordersExecuted) {
+            this.ordersExecuted = parseInt(ordersExecuted);
         }
     }
 }
@@ -629,6 +766,74 @@ class TradingJournal {
         document.getElementById('avg-loss').className = 'journal-stat negative';
     }
 
+    showAdvancedStats() {
+        const trades = this.tradingApp.state.history;
+        if (trades.length === 0) {
+            this.tradingApp.showAlert('Нет данных для анализа!', 'info');
+            return;
+        }
+
+        let stats = this.calculateAdvancedStats(trades);
+        
+        let message = `📊 Детальная статистика:\n\n`;
+        message += `Всего сделок: ${stats.totalTrades}\n`;
+        message += `Прибыльных: ${stats.profitableTrades} (${stats.winRate}%)\n`;
+        message += `Убыточных: ${stats.losingTrades}\n`;
+        message += `Общая прибыль: ${stats.totalProfit.toFixed(2)} USDT\n`;
+        message += `Общий убыток: ${stats.totalLoss.toFixed(2)} USDT\n`;
+        message += `Чистая прибыль: ${stats.netProfit.toFixed(2)} USDT\n`;
+        message += `Макс. просадка: ${stats.maxDrawdown.toFixed(2)}%\n`;
+        message += `Соотношение прибыль/убыток: ${stats.profitLossRatio.toFixed(2)}\n`;
+        message += `Средняя сделка: ${stats.avgTrade.toFixed(2)} USDT`;
+
+        this.tradingApp.showAlert(message, stats.netProfit >= 0 ? 'success' : 'error');
+    }
+
+    calculateAdvancedStats(trades) {
+        let totalProfit = 0;
+        let totalLoss = 0;
+        let profitableTrades = 0;
+        let losingTrades = 0;
+        let equityCurve = [100]; // Начальный депозит
+        let maxDrawdown = 0;
+
+        trades.forEach(trade => {
+            const profit = trade.type === 'BUY' ? 
+                (this.tradingApp.state.prices[trade.asset] - trade.price) * trade.amount :
+                (trade.price - this.tradingApp.state.prices[trade.asset]) * trade.amount;
+
+            if (profit >= 0) {
+                totalProfit += profit;
+                profitableTrades++;
+            } else {
+                totalLoss += Math.abs(profit);
+                losingTrades++;
+            }
+
+            // Обновляем кривую equity для расчета просадки
+            const currentEquity = equityCurve[equityCurve.length - 1] + profit;
+            equityCurve.push(currentEquity);
+            
+            // Расчет максимальной просадки
+            const peak = Math.max(...equityCurve);
+            const drawdown = ((peak - currentEquity) / peak) * 100;
+            maxDrawdown = Math.max(maxDrawdown, drawdown);
+        });
+
+        return {
+            totalTrades: trades.length,
+            profitableTrades: profitableTrades,
+            losingTrades: losingTrades,
+            winRate: ((profitableTrades / trades.length) * 100) || 0,
+            totalProfit: totalProfit,
+            totalLoss: totalLoss,
+            netProfit: totalProfit - totalLoss,
+            maxDrawdown: maxDrawdown,
+            profitLossRatio: totalLoss > 0 ? totalProfit / totalLoss : totalProfit,
+            avgTrade: (totalProfit - totalLoss) / trades.length
+        };
+    }
+
     resetStats() {
         document.getElementById('total-trades').querySelector('.stat-value').textContent = '0';
         document.getElementById('win-rate').querySelector('.stat-value').textContent = '0%';
@@ -648,6 +853,7 @@ class TradingApp {
             portfolio: { BTC: 0, ETH: 0, SOL: 0 },
             prices: { BTC: 0, ETH: 0, SOL: 0 },
             history: [],
+            orders: [],
             chart: null,
             candleSeries: null,
             smaSeries: null,
@@ -662,6 +868,7 @@ class TradingApp {
         this.riskCalculator = new RiskCalculator(this);
         this.achievementSystem = new AchievementSystem();
         this.tradingJournal = new TradingJournal(this);
+        this.orderManager = new OrderManager(this);
         this.tg = window.Telegram?.WebApp;
         
         this.init();
@@ -677,6 +884,7 @@ class TradingApp {
         this.updateUI();
         this.achievementSystem.displayAchievements();
         this.tradingJournal.updateStats();
+        this.orderManager.updateOrdersUI();
         
         // Добавляем подсказки после загрузки
         setTimeout(() => {
@@ -687,7 +895,7 @@ class TradingApp {
     async loadSavedData() {
         try {
             if (this.tg?.CloudStorage) {
-                const keys = ['balance', 'portfolio', 'history', 'prices'];
+                const keys = ['balance', 'portfolio', 'history', 'prices', 'orders'];
                 
                 for (const key of keys) {
                     this.tg.CloudStorage.getItem(key, (err, data) => {
@@ -706,11 +914,13 @@ class TradingApp {
             const savedPortfolio = localStorage.getItem('tradePortfolio');
             const savedHistory = localStorage.getItem('tradeHistory');
             const savedPrices = localStorage.getItem('tradePrices');
+            const savedOrders = localStorage.getItem('tradeOrders');
 
             if (savedBalance) this.state.balance = parseFloat(savedBalance);
             if (savedPortfolio) this.state.portfolio = JSON.parse(savedPortfolio);
             if (savedHistory) this.state.history = JSON.parse(savedHistory);
             if (savedPrices) this.state.prices = JSON.parse(savedPrices);
+            if (savedOrders) this.state.orders = JSON.parse(savedOrders);
 
         } catch (error) {
             console.error('Error loading saved data:', error);
@@ -723,8 +933,16 @@ class TradingApp {
                 balance: this.state.balance,
                 portfolio: this.state.portfolio,
                 history: this.state.history,
-                prices: this.state.prices
+                prices: this.state.prices,
+                orders: this.state.orders
             };
+
+            // Показать индикатор сохранения
+            const indicator = document.createElement('div');
+            indicator.className = 'saving-indicator';
+            indicator.textContent = '💾 Сохранение...';
+            document.body.appendChild(indicator);
+            setTimeout(() => indicator.classList.add('visible'), 10);
 
             if (this.tg?.CloudStorage) {
                 Object.keys(dataToSave).forEach(key => {
@@ -738,13 +956,20 @@ class TradingApp {
                 this.saveToLocalStorage(dataToSave);
             }
 
+            // Скрыть индикатор через секунду
+            setTimeout(() => {
+                indicator.classList.remove('visible');
+                setTimeout(() => indicator.remove(), 300);
+            }, 1000);
+
         } catch (error) {
             console.error('Error saving data:', error);
             this.saveToLocalStorage({
                 balance: this.state.balance,
                 portfolio: this.state.portfolio,
                 history: this.state.history,
-                prices: this.state.prices
+                prices: this.state.prices,
+                orders: this.state.orders
             });
         }
     }
@@ -754,6 +979,82 @@ class TradingApp {
         localStorage.setItem('tradePortfolio', JSON.stringify(data.portfolio));
         localStorage.setItem('tradeHistory', JSON.stringify(data.history));
         localStorage.setItem('tradePrices', JSON.stringify(data.prices));
+        localStorage.setItem('tradeOrders', JSON.stringify(data.orders));
+    }
+
+    exportData() {
+        const data = {
+            balance: this.state.balance,
+            portfolio: this.state.portfolio,
+            history: this.state.history,
+            prices: this.state.prices,
+            orders: this.state.orders,
+            achievements: this.achievementSystem.achievements,
+            savedAt: new Date().toISOString()
+        };
+
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `tradelearn-backup-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        this.showAlert('✅ Данные экспортированы!', 'success');
+    }
+
+    importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                
+                // Восстанавливаем данные
+                this.state.balance = data.balance || 100;
+                this.state.portfolio = data.portfolio || {};
+                this.state.history = data.history || [];
+                this.state.prices = data.prices || {};
+                this.state.orders = data.orders || [];
+                
+                if (data.achievements) {
+                    this.achievementSystem.achievements = data.achievements;
+                }
+                
+                this.saveData();
+                this.updateUI();
+                this.achievementSystem.displayAchievements();
+                this.orderManager.updateOrdersUI();
+                this.tradingJournal.updateStats();
+                
+                this.showAlert('✅ Данные импортированы!', 'success');
+            } catch (error) {
+                this.showAlert('❌ Ошибка при импорте данных', 'error');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    resetData() {
+        if (confirm('Вы уверены? Весь прогресс будет сброшен!')) {
+            localStorage.clear();
+            this.state.balance = 100;
+            this.state.portfolio = { BTC: 0, ETH: 0, SOL: 0 };
+            this.state.history = [];
+            this.state.orders = [];
+            this.achievementSystem = new AchievementSystem();
+            
+            this.saveData();
+            this.updateUI();
+            this.achievementSystem.displayAchievements();
+            this.orderManager.updateOrdersUI();
+            this.tradingJournal.updateStats();
+            
+            this.showAlert('🔄 Данные сброшены!', 'info');
+        }
     }
 
     initChart() {
@@ -937,27 +1238,34 @@ class TradingApp {
                 
                 document.getElementById('volume-24h').textContent = volume.toFixed(0);
                 
+                // Проверяем ордера при каждом обновлении цены
+                this.orderManager.checkOrders();
+                
             } catch (error) {
                 console.error("Ошибка обработки WebSocket сообщения:", error);
             }
         };
     }
 
-    executeTrade(action, asset, isMaxTrade = false) {
-        const amountInput = document.getElementById('trade-amount');
-        let amount = parseFloat(amountInput.value);
+    executeTrade(action, asset, isMaxTrade = false, amount = null) {
+        let tradeAmount = amount;
         
-        if (isMaxTrade) {
+        if (isMaxTrade && !amount) {
             if (action === 'BUY') {
-                amount = this.state.balance;
+                tradeAmount = this.state.balance;
             } else {
-                amount = this.state.portfolio[asset] || 0;
+                tradeAmount = this.state.portfolio[asset] || 0;
             }
         }
         
-        if (isNaN(amount) || amount <= 0) {
+        if (!tradeAmount) {
+            const amountInput = document.getElementById('trade-amount');
+            tradeAmount = parseFloat(amountInput.value);
+        }
+        
+        if (isNaN(tradeAmount) || tradeAmount <= 0) {
             this.showAlert('Введите корректную сумму!', 'error');
-            amountInput.focus();
+            document.getElementById('trade-amount').focus();
             return;
         }
 
@@ -965,15 +1273,15 @@ class TradingApp {
         let message = '';
 
         if (action === 'BUY') {
-            const amountBought = amount / price;
-            if (amount > this.state.balance) {
+            const amountBought = tradeAmount / price;
+            if (tradeAmount > this.state.balance) {
                 this.showAlert('Недостаточно средств на балансе!', 'error');
                 return;
             }
             
-            this.state.balance -= amount;
+            this.state.balance -= tradeAmount;
             this.state.portfolio[asset] = (this.state.portfolio[asset] || 0) + amountBought;
-            message = `✅ Куплено ${amountBought.toFixed(6)} ${asset} за ${amount.toFixed(2)} USDT`;
+            message = `✅ Куплено ${amountBought.toFixed(6)} ${asset} за ${tradeAmount.toFixed(2)} USDT`;
             
         } else {
             if (!this.state.portfolio[asset] || this.state.portfolio[asset] <= 0) {
@@ -981,23 +1289,23 @@ class TradingApp {
                 return;
             }
             
-            if (amount > this.state.portfolio[asset]) {
+            if (tradeAmount > this.state.portfolio[asset]) {
                 this.showAlert(`Нельзя продать больше ${this.state.portfolio[asset].toFixed(6)} ${asset}`, 'error');
                 return;
             }
             
-            const total = amount * price;
+            const total = tradeAmount * price;
             this.state.balance += total;
-            this.state.portfolio[asset] -= amount;
-            message = `🔴 Продано ${amount.toFixed(6)} ${asset} за ${total.toFixed(2)} USDT`;
+            this.state.portfolio[asset] -= tradeAmount;
+            message = `🔴 Продано ${tradeAmount.toFixed(6)} ${asset} за ${total.toFixed(2)} USDT`;
         }
 
         this.state.history.push({
             type: action,
             asset,
-            amount,
+            amount: tradeAmount,
             price,
-            total: action === 'BUY' ? amount : amount * price,
+            total: action === 'BUY' ? tradeAmount : tradeAmount * price,
             timestamp: new Date().toLocaleString()
         });
 
@@ -1170,13 +1478,13 @@ class TradingApp {
             this.achievementSystem.incrementRiskCalculatorUses();
         });
 
-        // Автозаполнение цены входа и стоп-лосса
-        document.getElementById('risk-entry').addEventListener('focus', () => {
+        // Быстрый расчет риска
+        document.getElementById('risk-entry-quick').addEventListener('click', () => {
             const currentPrice = this.state.prices[this.state.currentAsset];
             document.getElementById('risk-entry').value = currentPrice.toFixed(2);
         });
 
-        document.getElementById('risk-stop').addEventListener('focus', () => {
+        document.getElementById('risk-stop-quick').addEventListener('click', () => {
             const currentPrice = this.state.prices[this.state.currentAsset];
             const stopPrice = currentPrice * 0.98;
             document.getElementById('risk-stop').value = stopPrice.toFixed(2);
@@ -1187,12 +1495,45 @@ class TradingApp {
             this.showJournalDetails();
         });
 
+        document.getElementById('show-advanced-stats').addEventListener('click', () => {
+            this.tradingJournal.showAdvancedStats();
+        });
+
         // Клик по индикаторам для объяснения
         document.querySelectorAll('.indicator-label').forEach(label => {
             label.addEventListener('click', (e) => {
                 const term = e.target.textContent.trim();
                 this.teacher.explainIndicator(term);
             });
+        });
+
+        // Создание ордеров
+        document.getElementById('create-order-btn').addEventListener('click', () => {
+            const asset = document.getElementById('asset-select').value;
+            const orderType = document.getElementById('order-type').value;
+            const triggerPrice = parseFloat(document.getElementById('order-price').value);
+            const amount = parseFloat(document.getElementById('order-amount').value);
+            
+            if (!triggerPrice || !amount) {
+                this.showAlert('Заполните все поля для создания ордера!', 'error');
+                return;
+            }
+            
+            const tradeType = orderType === 'STOP' ? 'SELL' : 'BUY';
+            this.orderManager.createOrder(tradeType, asset, amount, triggerPrice, orderType);
+        });
+
+        // Управление данными
+        document.getElementById('export-btn').addEventListener('click', () => {
+            this.exportData();
+        });
+
+        document.getElementById('import-file').addEventListener('change', (e) => {
+            this.importData(e);
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            this.resetData();
         });
 
         // Сохранение данных
@@ -1239,6 +1580,12 @@ class TradingApp {
             if (e.altKey && e.key === 't') {
                 e.preventDefault();
                 this.toggleTeacherSection();
+            }
+            
+            // Alt + O - создание ордера
+            if (e.altKey && e.key === 'o') {
+                e.preventDefault();
+                document.getElementById('create-order-btn').click();
             }
         });
     }
