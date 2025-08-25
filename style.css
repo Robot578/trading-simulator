@@ -614,7 +614,7 @@ body {
 
 .journal-stats {
     display: grid;
-        grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     margin-bottom: 16px;
 }
@@ -864,6 +864,96 @@ body {
     opacity: 1;
 }
 
+/* Новые стили для ордеров */
+.orders-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.order-creation-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.order-inputs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.order-item {
+    background: var(--bg);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 4px solid var(--profit);
+}
+
+.order-item.sell {
+    border-left-color: var(--loss);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.order-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.order-time {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-align: right;
+}
+
+.cancel-order-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0;
+    margin: 0;
+}
+
+.empty-orders {
+    text-align: center;
+    color: var(--text-light);
+    padding: 20px;
+}
+
+/* Стили для управления данными */
+.data-management-section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+.data-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.data-buttons .trade-btn {
+    justify-content: center;
+}
+
 @media (max-width: 1024px) {
     .main-content {
         grid-template-columns: 1fr;
@@ -922,6 +1012,10 @@ body {
     .journal-stats {
         grid-template-columns: 1fr;
     }
+    
+    .order-inputs {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -957,5 +1051,17 @@ body {
         flex-direction: column;
         text-align: center;
         gap: 4px;
+    }
+    
+    .order-header {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+    
+    .order-details {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
     }
 }
