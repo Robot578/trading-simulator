@@ -46,6 +46,9 @@
                     <div class="chart-container">
                         <div id="candleChart"></div>
                         <div class="chart-loader" id="chartLoader">Загрузка графика...</div>
+                        <div class="loading-overlay" id="chartLoadingOverlay" style="display: none;">
+                            <div class="loader-spinner"></div>
+                        </div>
                     </div>
 
                     <div class="indicator-controls">
@@ -56,6 +59,10 @@
                         <label class="indicator-checkbox">
                             <input type="checkbox" id="ema-toggle">
                             <span class="indicator-label">EMA (12)</span>
+                        </label>
+                        <label class="indicator-checkbox">
+                            <input type="checkbox" id="rsi-toggle">
+                            <span class="indicator-label">RSI (14)</span>
                         </label>
                     </div>
                 </div>
@@ -332,6 +339,10 @@
             </div>
         </div>
     </div>
+    
+    <!-- Элементы для улучшений UI -->
+    <div id="chart-tooltip" class="chart-tooltip" style="display: none;"></div>
+    
     <script src="script.js"></script>
 </body>
 </html>
