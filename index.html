@@ -4,316 +4,265 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TradeLearn - Симулятор трейдинга</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div class="app-container">
-        <header class="header">
-            <div class="header-left">
-                <h1>📈 TradeLearn</h1>
-                <p>Симулятор трейдинга для начинающих</p>
+        <!-- Боковая панель -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-chart-line"></i> TradeLearn</h2>
+                <button class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-            <div class="header-right">
-                <div class="balance-card">
-                    <span>Баланс:</span>
-                    <span class="balance-amount" id="balance">100.00 USDT</span>
-                </div>
-                <button id="toggle-sidebar" class="teacher-btn">📊 Панель инструментов</button>
-            </div>
-        </header>
-
-        <div class="main-layout">
-            <div class="chart-container-wrapper">
-                <div class="chart-section">
-                    <div class="chart-header">
-                        <select id="asset-select" class="asset-select">
-                            <option value="BTC">BTC/USDT</option>
-                            <option value="ETH">ETH/USDT</option>
-                            <option value="SOL">SOL/USDT</option>
-                        </select>
-                        <div class="timeframe-selector">
-                            <button class="timeframe-btn active" data-tf="1h">1H</button>
-                            <button class="timeframe-btn" data-tf="4h">4H</button>
-                            <button class="timeframe-btn" data-tf="1d">1D</button>
-                        </div>
-                        <div class="price-display">
-                            <span class="asset-price" id="current-price">0.00</span>
-                            <span class="price-change" id="price-change">+0.00%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-container">
-                        <div id="candleChart"></div>
-                        <div class="chart-loader" id="chartLoader">Загрузка графика...</div>
-                    </div>
-
-                    <div class="indicator-controls">
-                        <label class="indicator-checkbox">
-                            <input type="checkbox" id="sma-toggle" checked>
-                            <span class="indicator-label">SMA (20)</span>
-                        </label>
-                        <label class="indicator-checkbox">
-                            <input type="checkbox" id="ema-toggle">
-                            <span class="indicator-label">EMA (12)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="trading-panel">
-                    <h3>Торговля</h3>
-                    <div class="trade-inputs">
-                        <div class="input-group">
-                            <label>Сумма (USDT) или количество:</label>
-                            <input type="number" id="trade-amount" class="trade-input" value="100" min="1">
-                        </div>
-                        <div class="trade-buttons">
-                            <button id="buy-btn" class="trade-btn buy-btn">
-                                <span>Купить</span>
-                                <small>LONG</small>
-                            </button>
-                            <button id="sell-btn" class="trade-btn sell-btn">
-                                <span>Продать</span>
-                                <small>SHORT</small>
-                            </button>
-                            <button id="buy-max-btn" class="trade-btn buy-btn">
-                                <span>Купить MAX</span>
-                            </button>
-                            <button id="sell-max-btn" class="trade-btn sell-btn">
-                                <span>Продать MAX</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="order-creation-section">
-                    <h3>📝 Создать ордер</h3>
-                    <div class="order-inputs">
-                        <div class="input-group">
-                            <label>Тип ордера:</label>
-                            <select id="order-type" class="trade-input">
-                                <option value="STOP">Стоп-лосс</option>
-                                <option value="TAKE_PROFIT">Тейк-профит</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Цена срабатывания:</label>
-                            <input type="number" id="order-price" class="trade-input" placeholder="Цена">
-                        </div>
-                        <div class="input-group">
-                            <label>Объем:</label>
-                            <input type="number" id="order-amount" class="trade-input" placeholder="Объем">
-                        </div>
-                        <button id="create-order-btn" class="trade-btn">🎯 Создать ордер</button>
-                    </div>
-                </div>
-
-                <div class="orders-section">
-                    <h3>🎯 Активные ордера</h3>
-                    <div class="orders-list" id="orders-container">
-                        <div class="empty-orders">Активных ордеров нет</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar" id="sidebar">
-                <div class="sidebar-header">
-                    <h3>📊 Инструменты трейдера</h3>
-                    <button id="close-sidebar" class="close-btn">×</button>
+            
+            <div class="sidebar-menu">
+                <div class="menu-item" data-section="teacher">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Учитель</span>
                 </div>
                 
-                <div class="sidebar-content">
-                    <!-- Учитель по трейдингу -->
-                    <div class="teacher-section">
-                        <h3>🎓 Учитель по трейдингу</h3>
-                        <div class="teacher-content">
-                            <div class="teacher-message" id="teacher-message">
-                                Добро пожаловать! Я помогу вам освоить основы трейдинга.
-                            </div>
-                            <div class="teacher-controls">
-                                <button id="teacher-hint" class="teacher-action-btn">💡 Подсказка</button>
-                                <button id="teacher-analysis" class="teacher-action-btn">📊 Анализ</button>
-                                <button id="teacher-lesson" class="teacher-action-btn">📚 Урок</button>
-                                <button id="teacher-dictionary-btn" class="teacher-action-btn">📖 Словарь</button>
-                            </div>
-                            
-                            <div class="teacher-lessons" id="teacher-lessons" style="display: none;">
-                                <h4>Выберите тему:</h4>
-                                <select id="lesson-select" class="lesson-select">
-                                    <option value="basics">Основы трейдинга</option>
-                                    <option value="indicators">Технические индикаторы</option>
-                                    <option value="risk">Управление рисками</option>
-                                    <option value="psychology">Психология трейдинга</option>
-                                </select>
-                                <button id="start-lesson" class="start-lesson-btn">Начать урок</button>
-                            </div>
+                <div class="menu-item" data-section="risk">
+                    <i class="fas fa-calculator"></i>
+                    <span>Калькулятор риска</span>
+                </div>
+                
+                <div class="menu-item" data-section="achievements">
+                    <i class="fas fa-trophy"></i>
+                    <span>Достижения</span>
+                </div>
+                
+                <div class="menu-item" data-section="journal">
+                    <i class="fas fa-book"></i>
+                    <span>Дневник трейдера</span>
+                </div>
+                
+                <div class="menu-item" data-section="portfolio">
+                    <i class="fas fa-wallet"></i>
+                    <span>Портфель</span>
+                </div>
+                
+                <div class="menu-item" data-section="history">
+                    <i class="fas fa-history"></i>
+                    <span>История сделок</span>
+                </div>
+                
+                <div class="menu-item" data-section="data">
+                    <i class="fas fa-database"></i>
+                    <span>Управление данными</span>
+                </div>
+            </div>
+        </div>
 
-                            <!-- Словарь терминов -->
-                            <div class="teacher-dictionary" id="teacher-dictionary" style="display: none;">
-                                <h4>📚 Словарь трейдера</h4>
-                                <div class="dictionary-search">
-                                    <input type="text" id="term-search" class="trade-input" placeholder="Поиск термина...">
-                                </div>
-                                <div class="dictionary-list">
-                                    <div class="dictionary-term" data-term="rsi">
-                                        <span class="term-name">RSI</span>
-                                        <span class="term-desc">Индекс относительной силы</span>
-                                    </div>
-                                    <div class="dictionary-term" data-term="sma">
-                                        <span class="term-name">SMA</span>
-                                        <span class="term-desc">Простая скользящая средняя</span>
-                                    </div>
-                                    <div class="dictionary-term" data-term="ema">
-                                        <span class="term-name">EMA</span>
-                                        <span class="term-desc">Экспоненциальная скользящая средняя</span>
-                                    </div>
-                                    <div class="dictionary-term" data-term="macd">
-                                        <span class="term-name">MACD</span>
-                                        <span class="term-desc">Схождение/расхождение скользящих средних</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+        <!-- Основное содержимое -->
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <h1>📈 TradeLearn</h1>
+                    <p>Симулятор трейдинга для начинающих</p>
+                </div>
+                <div class="header-right">
+                    <div class="balance-card">
+                        <span>Баланс:</span>
+                        <span class="balance-amount" id="balance">100.00 USDT</span>
                     </div>
+                </div>
+            </header>
 
-                    <!-- Калькулятор риска -->
-                    <div class="risk-calculator-section">
-                        <h3>🧮 Калькулятор риска</h3>
-                        <div class="risk-inputs">
-                            <div class="input-group">
-                                <label>Размер депозита (USDT):</label>
-                                <input type="number" id="risk-deposit" class="trade-input" value="100">
-                            </div>
-                            <div class="input-group">
-                                <label>Риск на сделку (%):</label>
-                                <input type="number" id="risk-percent" class="trade-input" value="2" min="0.1" max="10" step="0.1">
-                            </div>
-                            <div class="input-group">
-                                <label>Цена входа: <span id="risk-entry-quick" style="cursor: pointer; color: var(--primary);">(текущая)</span></label>
-                                <input type="number" id="risk-entry" class="trade-input">
-                            </div>
-                            <div class="input-group">
-                                <label>Стоп-лосс: <span id="risk-stop-quick" style="cursor: pointer; color: var(--primary);">(-2%)</span></label>
-                                <input type="number" id="risk-stop" class="trade-input">
-                            </div>
-                            <button id="calculate-risk" class="trade-btn" style="background: #2962ff;">
-                                Рассчитать позицию
-                            </button>
-                            <div class="risk-results" id="risk-results">
-                                <div class="risk-result">
-                                    <span>Объем:</span>
-                                    <span id="risk-volume">0.00</span>
-                                </div>
-                                <div class="risk-result">
-                                    <span>Сумма риска:</span>
-                                    <span id="risk-amount">0.00 USDT</span>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Секции контента (изначально скрыты) -->
+            <div class="content-section" id="teacher-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-graduation-cap"></i> Учитель по трейдингу</h2>
+                    <button class="close-section"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="teacher-content">
+                    <div class="teacher-message" id="teacher-message">
+                        Добро пожаловать! Я помогу вам освоить основы трейдинга.
                     </div>
-
-                    <!-- Достижения -->
-                    <div class="achievements-section">
-                        <h3>🏆 Достижения</h3>
-                        <div class="achievements-grid" id="achievements-container">
-                            <!-- Achievements will be loaded here -->
-                        </div>
-                    </div>
-
-                    <!-- Дневник трейдера -->
-                    <div class="trading-journal-section">
-                        <h3>📊 Дневник трейдера</h3>
-                        <div class="journal-stats">
-                            <div class="journal-stat" id="total-trades">
-                                <span class="stat-value">0</span>
-                                <span class="stat-label">Всего сделок</span>
-                            </div>
-                            <div class="journal-stat" id="win-rate">
-                                <span class="stat-value">0%</span>
-                                <span class="stat-label">Процент побед</span>
-                            </div>
-                            <div class="journal-stat" id="avg-profit">
-                                <span class="stat-value">0.00</span>
-                                <span class="stat-label">Средняя прибыль</span>
-                            </div>
-                            <div class="journal-stat" id="avg-loss">
-                                <span class="stat-value">0.00</span>
-                                <span class="stat-label">Средний убыток</span>
-                            </div>
-                        </div>
-                        <button id="show-journal" class="trade-btn" style="background: #8e44ad;">
-                            📖 Статистика
+                    <div class="teacher-controls">
+                        <button id="teacher-hint" class="teacher-action-btn">
+                            <i class="fas fa-lightbulb"></i> Подсказка
                         </button>
-                        <button id="show-advanced-stats" class="trade-btn" style="background: #27ae60; margin-top: 10px;">
-                            📈 Расширенная статистика
+                        <button id="teacher-analysis" class="teacher-action-btn">
+                            <i class="fas fa-chart-bar"></i> Анализ
+                        </button>
+                        <button id="teacher-lesson" class="teacher-action-btn">
+                            <i class="fas fa-book"></i> Урок
                         </button>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Управление данными -->
-                    <div class="data-management-section">
-                        <h3>💾 Управление данными</h3>
-                        <div class="data-buttons">
-                            <button id="export-btn" class="trade-btn">📤 Экспорт данных</button>
-                            <label for="import-file" class="trade-btn">📥 Импорт данных</label>
-                            <input type="file" id="import-file" accept=".json" style="display: none;">
-                            <button id="reset-btn" class="trade-btn" style="background: #e74c3c;">🔄 Сбросить данные</button>
+            <div class="content-section" id="risk-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-calculator"></i> Калькулятор риска</h2>
+                    <button class="close-section"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="risk-content">
+                    <div class="input-group">
+                        <label>Размер депозита (USDT):</label>
+                        <input type="number" id="risk-deposit" class="trade-input" value="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Риск на сделку (%):</label>
+                        <input type="number" id="risk-percent" class="trade-input" value="2">
+                    </div>
+                    <button id="calculate-risk" class="action-btn">
+                        Рассчитать
+                    </button>
+                    <div class="risk-results">
+                        <div class="result-item">
+                            <span>Объем:</span>
+                            <span id="risk-volume">0.00</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Сумма риска:</span>
+                            <span id="risk-amount">0.00 USDT</span>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="info-section">
-                        <h3>📊 Основные показатели</h3>
-                        <div class="metrics-grid">
-                            <div class="metric-card">
-                                <span class="metric-label">Объем 24ч</span>
-                                <span class="metric-value" id="volume-24h">0</span>
-                            </div>
-                            <div class="metric-card">
-                                <span class="metric-label">Максимум</span>
-                                <span class="metric-value" id="high-24h">0</span>
-                            </div>
-                            <div class="metric-card">
-                                <span class="metric-label">Минимум</span>
-                                <span class="metric-value" id="low-24h">0</span>
-                            </div>
-                            <div class="metric-card">
-                                <span class="metric-label">Изменение</span>
-                                <span class="metric-value" id="change-24h">0%</span>
-                            </div>
+            <div class="content-section" id="achievements-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-trophy"></i> Достижения</h2>
+                    <button class="close-section"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="achievements-content">
+                    <div class="achievement-grid">
+                        <div class="achievement-card">
+                            <div class="achievement-icon">🎯</div>
+                            <div class="achievement-title">Первая сделка</div>
+                            <div class="achievement-desc">Совершите вашу первую торговую операцию</div>
+                        </div>
+                        <div class="achievement-card locked">
+                            <div class="achievement-icon">💰</div>
+                            <div class="achievement-title">Профит +10%</div>
+                            <div class="achievement-desc">Достигните общей прибыли +10% от депозита</div>
+                        </div>
+                        <div class="achievement-card locked">
+                            <div class="achievement-icon">🌐</div>
+                            <div class="achievement-title">Диверсификация</div>
+                            <div class="achievement-desc">Торгуйте тремя разными активами</div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="portfolio-section">
-                        <h3>💼 Портфель</h3>
-                        <div class="portfolio-grid">
-                            <div class="portfolio-item">
-                                <span>BTC:</span>
-                                <span id="btc-amount">0.000000</span>
-                            </div>
-                            <div class="portfolio-item">
-                                <span>ETH:</span>
-                                <span id="eth-amount">0.000000</span>
-                            </div>
-                            <div class="portfolio-item">
-                                <span>SOL:</span>
-                                <span id="sol-amount">0.000000</span>
-                            </div>
-                            <div class="portfolio-item">
-                                <span>Общая стоимость:</span>
-                                <span id="total-value">0.00 USDT</span>
-                            </div>
+            <div class="content-section" id="journal-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-book"></i> Дневник трейдера</h2>
+                    <button class="close-section"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="journal-content">
+                    <div class="journal-stats">
+                        <div class="journal-stat">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">Всего сделок</span>
+                        </div>
+                        <div class="journal-stat">
+                            <span class="stat-value">0%</span>
+                            <span class="stat-label">Процент побед</span>
+                        </div>
+                        <div class="journal-stat">
+                            <span class="stat-value">0.00</span>
+                            <span class="stat-label">Средняя прибыль</span>
+                        </div>
+                        <div class="journal-stat">
+                            <span class="stat-value">0.00</span>
+                            <span class="stat-label">Средний убыток</span>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="history-section">
-                        <h3>📋 История сделок</h3>
-                        <div class="history-list" id="history-items">
-                            <div class="empty-history">Сделок пока нет</div>
+            <div class="content-section" id="portfolio-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-wallet"></i> Портфель</h2>
+                    <button class="close-section"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="portfolio-content">
+                    <div class="portfolio-grid">
+                        <div class="portfolio-item">
+                            <span>BTC:</span>
+                            <span id="btc-amount">0.000000</span>
+                        </div>
+                        <div class="portfolio-item">
+                            <span>ETH:</span>
+                            <span id="eth-amount">0.000000</span>
+                        </div>
+                        <div class="portfolio-item">
+                            <span>SOL:</span>
+                            <span id="sol-amount">0.000000</span>
+                        </div>
+                        <div class="portfolio-item">
+                            <span>Общая стоимость:</span>
+                            <span id="total-value">100.00 USDT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section" id="history-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> История сделок</h2>
+                    <button class="close-section"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="history-content">
+                    <div class="history-list">
+                        <div class="empty-history">Сделок пока нет</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section" id="data-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-database"></i> Управление данными</h2>
+                    <button class="close-section"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="data-content">
+                    <div class="data-buttons">
+                        <button class="action-btn">
+                            <i class="fas fa-download"></i> Экспорт данных
+                        </button>
+                        <button class="action-btn">
+                            <i class="fas fa-upload"></i> Импорт данных
+                        </button>
+                        <button class="action-btn reset-btn">
+                            <i class="fas fa-trash"></i> Сбросить данные
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section active" id="default-section">
+                <div class="welcome-message">
+                    <h2>Добро пожаловать в TradeLearn!</h2>
+                    <p>Выберите раздел в боковой панели для начала работы.</p>
+                    <div class="feature-cards">
+                        <div class="feature-card">
+                            <i class="fas fa-graduation-cap"></i>
+                            <h3>Учитель</h3>
+                            <p>Изучите основы трейдинга с помощью интерактивных уроков</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-calculator"></i>
+                            <h3>Калькулятор риска</h3>
+                            <p>Рассчитайте оптимальный размер позиции</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-trophy"></i>
+                            <h3>Достижения</h3>
+                            <p>Отслеживайте ваш прогресс в обучении</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
