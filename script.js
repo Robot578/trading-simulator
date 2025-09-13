@@ -61,6 +61,11 @@ class TradingApp {
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('show');
             mainContent.classList.toggle('expanded');
+            
+            // Закрываем все секции при открытии боковой панели на мобильных
+            if (window.innerWidth <= 1024 && sidebar.classList.contains('show')) {
+                this.hideAllSections();
+            }
         });
 
         // Навигация по секциям
@@ -538,554 +543,311 @@ class TradingApp {
 
         // Торговые кнопки
         document.getElementById('buy-btn').addEventListener('click', () => {
-            this.executeTrade('buy');
+            this.showTradeModal('buy');
         });
 
         document.getElementById('sell-btn').addEventListener('click', () => {
-            this.executeTrade('sell');
+            this.showTradeModal('sell');
         });
 
-        document.getElementById('buy-max-btn').addEventListener('click', () => {
-            this.buyMax();
+        // Модальное окно
+        document.getElementById('trade-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'trade-modal') {
+                this.hideTradeModal();
+            }
         });
 
-        // Учитель
-        document.getElementById('teacher-hint').addEventListener('click', () => {
-            this.teacher.giveHint();
+        document.getElementById('close-modal').addEventListener('click', () => {
+            this.hideTradeModal();
         });
 
-        document.getElementById('teacher-analysis').addEventListener('click', () => {
-            this.teacher.giveAnalysis();
+        document.getElementById('confirm-trade').addEventListener('click', () => {
+            this.executeTrade();
         });
 
-        document.getElementById('teacher-lesson').addEventListener('click', () => {
-            this.teacher.giveLesson();
+        // Слайдер количества
+        const amountSlider = document.getElementById('trade-amount');
+        const amountInput = document.getElementById('amount-input');
+        
+        amountSlider.addEventListener('input', () => {
+            amountInput.value = amountSlider.value;
+            this.updateTradePreview();
         });
 
-        document.getElementById('teacher-dictionary-btn').addEventListener('click', () => {
-            this.teacher.toggleDictionary();
+        amountInput.addEventListener('input', () => {
+            const maxAmount = this.calculateMaxAmount();
+            let value = Math.min(parseFloat(amountInput.value) || 0, maxAmount);
+            amountSlider.value = value;
+            amountInput.value = value;
+            this.updateTradePreview();
         });
 
-        // Риски
-        document.getElementById('calculate-risk').addEventListener('click', () => {
-            this.riskManager.calculateRisk();
-        });
-
-        // Ордера
-        document.getElementById('create-order-btn').addEventListener('click', () => {
-            this.orderManager.createOrder();
-        });
-
-        // Данные
-        document.getElementById('export-btn').addEventListener('click', () => {
-            this.exportData();
-        });
-
-        document.getElementById('import-btn').addEventListener('click', () => {
-            document.getElementById('import-file').click();
-        });
-
-        document.getElementById('import-file').addEventListener('change', (e) => {
-            this.importData(e);
-        });
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            this.resetData();
-        });
-
-        // Словарь терминов
-        document.querySelectorAll('.dictionary-term').forEach(term => {
-            term.addEventListener('click', (e) => {
-                const termName = e.currentTarget.dataset.term;
-                this.teacher.explainTerm(termName);
+        // Процентные кнопки
+        document.querySelectorAll('.percentage-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const percentage = parseFloat(e.target.dataset.percent);
+                const maxAmount = this.calculateMaxAmount();
+                const amount = maxAmount * (percentage / 100);
+                
+                amountSlider.value = amount;
+                amountInput.value = amount.toFixed(4);
+                this.updateTradePreview();
             });
+        });
+
+        // Ордеры
+        document.getElementById('limit-price').addEventListener('input', () => {
+            this.updateTradePreview();
+        });
+
+        // Обновление графика при ресайзе
+        window.addEventListener('resize', () => {
+            if (this.chart) {
+                const chartContainer = document.getElementById('candleChart');
+                this.chart.applyOptions({
+                    width: chartContainer.clientWidth,
+                    height: chartContainer.clientHeight
+                });
+            }
         });
     }
 
     setupHotkeys() {
         document.addEventListener('keydown', (e) => {
-            // Пропускаем комбинации с Ctrl/Alt
-            if (e.ctrlKey || e.altKey || e.metaKey) return;
-
-            switch (e.key) {
-                case 'b':
-                case 'B':
-                    e.preventDefault();
-                    this.executeTrade('buy');
-                    break;
-                case 's':
-                case 'S':
-                    e.preventDefault();
-                    this.executeTrade('sell');
-                    break;
-                case '1':
-                    this.showSection('chart');
-                    break;
-                case '2':
-                    this.showSection('teacher');
-                    break;
-                case '3':
-                    this.showSection('trading');
-                    break;
-                case '4':
-                    this.showSection('orders');
-                    break;
-                case 'Escape':
-                    this.hideAllSections();
-                    break;
-            }
-        });
-    }
-
-    executeTrade(type) {
-        const amount = parseFloat(document.getElementById('trade-amount').value);
-        
-        if (isNaN(amount) || amount <= 0) {
-            this.teacher.showMessage('Введите корректную сумму для торговли', 'error');
-            return;
-        }
-
-        if (type === 'buy') {
-            if (amount > this.balance) {
-                this.teacher.showMessage('Недостаточно средств на балансе', 'error');
-                return;
-            }
-
-            const assetAmount = amount / this.currentPrice;
-            this.portfolio[this.currentAsset] += assetAmount;
-            this.balance -= amount;
-
-            this.tradeHistory.push({
-                type: 'buy',
-                asset: this.currentAsset,
-                amount: assetAmount,
-                price: this.currentPrice,
-                total: amount,
-                timestamp: Date.now()
-            });
-
-            this.teacher.showMessage(`Куплено ${assetAmount.toFixed(6)} ${this.currentAsset} за ${amount.toFixed(2)} USDT`);
-
-        } else if (type === 'sell') {
-            const assetAmount = amount / this.currentPrice;
-            
-            if (assetAmount > this.portfolio[this.currentAsset]) {
-                this.teacher.showMessage('Недостаточно активов для продажи', 'error');
-                return;
-            }
-
-            this.portfolio[this.currentAsset] -= assetAmount;
-            this.balance += amount;
-
-            this.tradeHistory.push({
-                type: 'sell',
-                asset: this.currentAsset,
-                amount: assetAmount,
-                price: this.currentPrice,
-                total: amount,
-                timestamp: Date.now()
-            });
-
-            this.teacher.showMessage(`Продано ${assetAmount.toFixed(6)} ${this.currentAsset} за ${amount.toFixed(2)} USDT`);
-        }
-
-        // Проверяем достижения
-        if (!this.achievements.firstTrade) {
-            this.achievements.firstTrade = true;
-            this.achievementSystem.unlockAchievement('firstTrade');
-        }
-
-        this.updateUI();
-        this.saveData();
-    }
-
-    buyMax() {
-        const maxAmount = this.balance;
-        document.getElementById('trade-amount').value = maxAmount.toFixed(2);
-        this.executeTrade('buy');
-    }
-
-    updateUI() {
-        // Обновляем баланс
-        document.getElementById('balance').textContent = `${this.balance.toFixed(2)} USDT`;
-        
-        // Обновляем портфель
-        document.getElementById('btc-amount').textContent = this.portfolio.BTC.toFixed(6);
-        document.getElementById('eth-amount').textContent = this.portfolio.ETH.toFixed(6);
-        document.getElementById('sol-amount').textContent = this.portfolio.SOL.toFixed(6);
-        
-        // Обновляем общую стоимость
-        const totalValue = this.calculateTotalValue();
-        document.getElementById('total-value').textContent = `${totalValue.toFixed(2)} USDT`;
-        
-        // Обновляем историю
-        this.updateTradeHistory();
-        
-        // Обновляем статистику
-        this.updateStats();
-    }
-
-    calculateTotalValue() {
-        let total = this.balance;
-        
-        // Здесь должна быть логика расчета стоимости активов по текущим ценам
-        // Для простоты используем последние известные цены
-        total += this.portfolio.BTC * (this.currentAsset === 'BTC' ? this.currentPrice : 50000);
-        total += this.portfolio.ETH * (this.currentAsset === 'ETH' ? this.currentPrice : 3000);
-        total += this.portfolio.SOL * (this.currentAsset === 'SOL' ? this.currentPrice : 100);
-        
-        return total;
-    }
-
-    updateTradeHistory() {
-        const container = document.getElementById('history-items');
-        container.innerHTML = '';
-        
-        if (this.tradeHistory.length === 0) {
-            container.innerHTML = '<div class="empty-history">Сделок пока нет</div>';
-            return;
-        }
-        
-        const recentTrades = this.tradeHistory.slice(-10).reverse();
-        
-        recentTrades.forEach(trade => {
-            const profitClass = trade.type === 'buy' ? 'profit-negative' : 'profit-positive';
-            const profitSign = trade.type === 'buy' ? '-' : '+';
-            
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.innerHTML = `
-                <div class="history-info">
-                    <div class="history-type">${trade.type === 'buy' ? 'Покупка' : 'Продажа'} ${trade.asset}</div>
-                    <div class="history-price">${trade.price.toFixed(2)} USDT</div>
-                    <div class="history-amount">${trade.amount.toFixed(6)} ${trade.asset}</div>
-                </div>
-                <div class="history-profit ${profitClass}">
-                    ${profitSign}${trade.total.toFixed(2)} USDT
-                </div>
-            `;
-            container.appendChild(item);
-        });
-    }
-
-    updateStats() {
-        const totalTrades = this.tradeHistory.length;
-        const winningTrades = this.tradeHistory.filter(trade => trade.type === 'sell').length;
-        const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
-        
-        document.getElementById('total-trades').querySelector('.stat-value').textContent = totalTrades;
-        document.getElementById('win-rate').querySelector('.stat-value').textContent = `${winRate.toFixed(1)}%`;
-    }
-
-    async saveData() {
-        const data = {
-            balance: this.balance,
-            portfolio: this.portfolio,
-            tradeHistory: this.tradeHistory,
-            achievements: this.achievements,
-            activeOrders: this.activeOrders
-        };
-        
-        localStorage.setItem('tradeLearnData', JSON.stringify(data));
-    }
-
-    async loadSavedData() {
-        const saved = localStorage.getItem('tradeLearnData');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                this.balance = data.balance || 100.00;
-                this.portfolio = data.portfolio || { BTC: 0, ETH: 0, SOL: 0 };
-                this.tradeHistory = data.tradeHistory || [];
-                this.achievements = data.achievements || { firstTrade: false, profit10: false };
-                this.activeOrders = data.activeOrders || [];
-            } catch (e) {
-                console.error('Ошибка загрузки данных:', e);
-            }
-        }
-    }
-
-    exportData() {
-        const data = {
-            balance: this.balance,
-            portfolio: this.portfolio,
-            tradeHistory: this.tradeHistory,
-            achievements: this.achievements,
-            activeOrders: this.activeOrders,
-            exportDate: new Date().toISOString()
-        };
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `tradelearn_export_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        
-        this.teacher.showMessage('Данные успешно экспортированы');
-    }
-
-    importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                
-                this.balance = data.balance || this.balance;
-                this.portfolio = data.portfolio || this.portfolio;
-                this.tradeHistory = data.tradeHistory || this.tradeHistory;
-                this.achievements = data.achievements || this.achievements;
-                this.activeOrders = data.activeOrders || this.activeOrders;
-                
-                this.updateUI();
-                this.orderManager.updateOrdersUI();
-                this.achievementSystem.displayAchievements();
-                this.saveData();
-                
-                this.teacher.showMessage('Данные успешно импортированы');
-            } catch (error) {
-                this.teacher.showMessage('Ошибка импорта данных. Неверный формат файла.', 'error');
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = '';
-    }
-
-    resetData() {
-        if (confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
-            this.balance = 100.00;
-            this.portfolio = { BTC: 0, ETH: 0, SOL: 0 };
-            this.tradeHistory = [];
-            this.achievements = { firstTrade: false, profit10: false };
-            this.activeOrders = [];
-            
-            this.updateUI();
-            this.orderManager.updateOrdersUI();
-            this.achievementSystem.displayAchievements();
-            this.saveData();
-            
-            this.teacher.showMessage('Данные успешно сброшены');
-        }
-    }
-}
-
-class TradingTeacher {
-    constructor(app) {
-        this.app = app;
-        this.messages = {
-            welcome: "Добро пожаловать! Я помогу вам освоить основы трейдинга.",
-            hints: [
-                "Сначала изучите график и индикаторы перед торговлей.",
-                "Используйте стоп-лосс для ограничения рисков.",
-                "Начинайте с малых сумм для обучения.",
-                "Анализируйте тренды перед открытием позиций."
-            ],
-            lessons: [
-                "Тренд - ваш друг. Всегда торгуйте в направлении тренда.",
-                "Риск-менеджмент - ключ к успеху. Рискуйте не более 2% от депозита.",
-                "Индикаторы помогают принимать решения, но не гарантируют успех.",
-                "Эмоции - главный враг трейдера. Следуйте своему плану."
-            ]
-        };
-    }
-
-    showMessage(message, type = 'info') {
-        const messageElement = document.getElementById('teacher-message');
-        messageElement.textContent = message;
-        messageElement.className = `teacher-message ${type}`;
-    }
-
-    giveHint() {
-        const randomHint = this.messages.hints[Math.floor(Math.random() * this.messages.hints.length)];
-        this.showMessage(`💡 Подсказка: ${randomHint}`, 'hint');
-    }
-
-    giveAnalysis() {
-        const analysis = this.generateAnalysis();
-        this.showMessage(`📊 Анализ: ${analysis}`, 'analysis');
-    }
-
-    generateAnalysis() {
-        const trends = ['восходящий', 'нисходящий', 'боковой'];
-        const signals = ['покупки', 'продажи', 'ожидания'];
-        const randomTrend = trends[Math.floor(Math.random() * trends.length)];
-        const randomSignal = signals[Math.floor(Math.random() * signals.length)];
-        
-        return `Текущий тренд ${randomTrend}. Индикаторы показывают сигнал ${randomSignal}.`;
-    }
-
-    giveLesson() {
-        const randomLesson = this.messages.lessons[Math.floor(Math.random() * this.messages.lessons.length)];
-        this.showMessage(`📚 Урок: ${randomLesson}`, 'lesson');
-    }
-
-    toggleDictionary() {
-        const dictionary = document.getElementById('teacher-dictionary');
-        dictionary.style.display = dictionary.style.display === 'none' ? 'block' : 'none';
-    }
-
-    explainTerm(term) {
-        const explanations = {
-            sma: "SMA (Simple Moving Average) - простая скользящая средняя. Показывает среднюю цену за определенный период.",
-            ema: "EMA (Exponential Moving Average) - экспоненциальная скользящая средняя. Более чувствительна к последним ценам.",
-            rsi: "RSI (Relative Strength Index) - индекс относительной силы. Показывает перекупленность или перепроданность актива.",
-            stoploss: "Stop-Loss - ордер для ограничения убытков. Автоматически закрывает позицию при достижении определенной цены."
-        };
-        
-        this.showMessage(`📖 ${explanations[term] || 'Термин не найден'}`, 'info');
-    }
-
-    addInteractiveTips() {
-        this.addChartTip();
-        this.addTradingTip();
-    }
-
-    addChartTip() {
-        setTimeout(() => {
-            this.showMessage("💡 Попробуйте переключать таймфреймы кнопками 1H, 4H, 1D для анализа разных периодов");
-        }, 3000);
-    }
-
-    addTradingTip() {
-        setTimeout(() => {
-            this.showMessage("💡 Используйте горячие клавиши: B - купить, S - продать, 1-4 - переключение разделов");
-        }, 8000);
-    }
-}
-
-class OrderManager {
-    constructor(app) {
-        this.app = app;
-    }
-
-    createOrder() {
-        const type = document.getElementById('order-type').value;
-        const price = parseFloat(document.getElementById('order-price').value);
-        const amount = parseFloat(document.getElementById('order-amount').value);
-        
-        if (isNaN(price) || isNaN(amount) || price <= 0 || amount <= 0) {
-            this.app.teacher.showMessage('Введите корректные значения цены и объема', 'error');
-            return;
-        }
-
-        const order = {
-            id: Date.now(),
-            type,
-            asset: this.app.currentAsset,
-            price,
-            amount,
-            status: 'active',
-            createdAt: Date.now()
-        };
-
-        this.app.activeOrders.push(order);
-        this.updateOrdersUI();
-        this.app.saveData();
-        
-        this.app.teacher.showMessage(`Ордер создан: ${type === 'STOP' ? 'Стоп-лосс' : 'Тейк-профит'} на ${price} USDT`);
-    }
-
-    cancelOrder(orderId) {
-        this.app.activeOrders = this.app.activeOrders.filter(order => order.id !== orderId);
-        this.updateOrdersUI();
-        this.app.saveData();
-        
-        this.app.teacher.showMessage('Ордер отменен');
-    }
-
-    updateOrdersUI() {
-        const container = document.getElementById('orders-container');
-        container.innerHTML = '';
-        
-        if (this.app.activeOrders.length === 0) {
-            container.innerHTML = '<div class="empty-orders">Активных ордеров нет</div>';
-            return;
-        }
-        
-        const activeOrders = this.app.activeOrders.filter(order => 
-            order.status === 'active' && order.asset === this.app.currentAsset
-        );
-        
-        if (activeOrders.length === 0) {
-            container.innerHTML = '<div class="empty-orders">Активных ордеров для этого актива нет</div>';
-            return;
-        }
-        
-        activeOrders.forEach(order => {
-            const orderElement = document.createElement('div');
-            orderElement.className = 'order-item';
-            orderElement.innerHTML = `
-                <div class="order-info">
-                    <div class="order-type">${order.type === 'STOP' ? 'Стоп-лосс' : 'Тейк-профит'}</div>
-                    <div class="order-price">${order.price.toFixed(2)} USDT</div>
-                    <div class="order-amount">${order.amount.toFixed(6)} ${order.asset}</div>
-                </div>
-                <button class="cancel-order-btn" onclick="app.orderManager.cancelOrder(${order.id})">
-                    Отменить
-                </button>
-            `;
-            container.appendChild(orderElement);
-        });
-    }
-
-    checkOrders() {
-        this.app.activeOrders.forEach(order => {
-            if (order.status === 'active' && order.asset === this.app.currentAsset) {
-                const shouldTrigger = order.type === 'STOP' ? 
-                    this.app.currentPrice <= order.price : 
-                    this.app.currentPrice >= order.price;
-                
-                if (shouldTrigger) {
-                    this.executeOrder(order);
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'b':
+                        e.preventDefault();
+                        this.showTradeModal('buy');
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        this.showTradeModal('sell');
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        this.switchTimeframe('1h');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        this.switchTimeframe('4h');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        this.switchTimeframe('1d');
+                        break;
                 }
             }
         });
     }
 
-    executeOrder(order) {
-        order.status = 'executed';
-        
-        // Здесь должна быть логика исполнения ордера
-        this.app.teacher.showMessage(`Ордер исполнен: ${order.type} по цене ${order.price} USDT`);
-        
-        this.updateOrdersUI();
-        this.app.saveData();
-    }
-}
-
-class RiskManager {
-    constructor(app) {
-        this.app = app;
+    switchTimeframe(timeframe) {
+        this.currentTimeframe = timeframe;
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.tf === timeframe) {
+                btn.classList.add('active');
+            }
+        });
+        this.updateChartData();
     }
 
-    calculateRisk() {
-        const deposit = parseFloat(document.getElementById('risk-deposit').value);
-        const riskPercent = parseFloat(document.getElementById('risk-percent').value);
-        const entryPrice = parseFloat(document.getElementById('risk-entry').value);
-        const stopPrice = parseFloat(document.getElementById('risk-stop').value);
+    showTradeModal(type) {
+        const modal = document.getElementById('trade-modal');
+        const title = document.getElementById('modal-title');
         
-        if (isNaN(deposit) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopPrice)) {
-            this.app.teacher.showMessage('Заполните все поля калькулятора риска', 'error');
+        this.tradeType = type;
+        title.textContent = type === 'buy' ? 'Купить' : 'Продать';
+        title.className = type === 'buy' ? 'buy' : 'sell';
+        
+        this.updateTradeModal();
+        modal.style.display = 'flex';
+    }
+
+    hideTradeModal() {
+        document.getElementById('trade-modal').style.display = 'none';
+    }
+
+    updateTradeModal() {
+        const maxAmount = this.calculateMaxAmount();
+        const amountSlider = document.getElementById('trade-amount');
+        const amountInput = document.getElementById('amount-input');
+        
+        amountSlider.max = maxAmount;
+        amountSlider.value = 0;
+        amountInput.value = '0';
+        
+        document.getElementById('current-price-display').textContent = this.currentPrice.toFixed(2);
+        document.getElementById('limit-price').value = this.currentPrice.toFixed(2);
+        
+        this.updateTradePreview();
+    }
+
+    calculateMaxAmount() {
+        if (this.tradeType === 'buy') {
+            return this.balance / this.currentPrice;
+        } else {
+            return this.portfolio[this.currentAsset];
+        }
+    }
+
+    updateTradePreview() {
+        const amount = parseFloat(document.getElementById('amount-input').value) || 0;
+        const price = parseFloat(document.getElementById('limit-price').value) || this.currentPrice;
+        const total = amount * price;
+        const fee = total * 0.001; // 0.1% комиссия
+
+        document.getElementById('trade-total').textContent = total.toFixed(2);
+        document.getElementById('trade-fee').textContent = fee.toFixed(2);
+        document.getElementById('trade-net').textContent = (this.tradeType === 'buy' ? total + fee : total - fee).toFixed(2);
+    }
+
+    executeTrade() {
+        const amount = parseFloat(document.getElementById('amount-input').value) || 0;
+        const price = parseFloat(document.getElementById('limit-price').value) || this.currentPrice;
+        
+        if (amount <= 0) {
+            this.teacher.showMessage('Введите корректное количество', 'error');
             return;
         }
 
-        if (entryPrice <= stopPrice) {
-            this.app.teacher.showMessage('Цена входа должна быть выше стоп-лосса для лонга', 'error');
-            return;
+        if (this.tradeType === 'buy') {
+            const totalCost = amount * price * 1.001; // Цена + комиссия
+            if (totalCost > this.balance) {
+                this.teacher.showMessage('Недостаточно средств', 'error');
+                return;
+            }
+            
+            this.balance -= totalCost;
+            this.portfolio[this.currentAsset] += amount;
+            
+            this.tradeHistory.push({
+                type: 'buy',
+                asset: this.currentAsset,
+                amount,
+                price,
+                total: totalCost,
+                time: new Date()
+            });
+            
+            this.teacher.showMessage(`Куплено ${amount} ${this.currentAsset} по ${price.toFixed(2)} USDT`, 'success');
+            
+        } else {
+            if (amount > this.portfolio[this.currentAsset]) {
+                this.teacher.showMessage('Недостаточно активов для продажи', 'error');
+                return;
+            }
+            
+            const totalRevenue = amount * price * 0.999; // Цена - комиссия
+            this.balance += totalRevenue;
+            this.portfolio[this.currentAsset] -= amount;
+            
+            this.tradeHistory.push({
+                type: 'sell',
+                asset: this.currentAsset,
+                amount,
+                price,
+                total: totalRevenue,
+                time: new Date()
+            });
+            
+            this.teacher.showMessage(`Продано ${amount} ${this.currentAsset} по ${price.toFixed(2)} USDT`, 'success');
         }
 
-        const riskAmount = deposit * (riskPercent / 100);
-        const riskPerUnit = entryPrice - stopPrice;
-        const volume = riskAmount / riskPerUnit;
-
-        document.getElementById('risk-volume').textContent = volume.toFixed(6);
-        document.getElementById('risk-amount').textContent = `${riskAmount.toFixed(2)} USDT`;
+        // Проверяем достижения
+        this.achievementSystem.checkAchievements();
         
-        this.app.teacher.showMessage(`Рекомендуемый объем: ${volume.toFixed(6)} ${this.app.currentAsset}`);
+        this.updateUI();
+        this.hideTradeModal();
+        this.saveData();
+    }
+
+    updateUI() {
+        // Баланс и портфель
+        document.getElementById('balance').textContent = this.balance.toFixed(2);
+        
+        const portfolioGrid = document.getElementById('portfolio-grid');
+        portfolioGrid.innerHTML = '';
+        
+        Object.entries(this.portfolio).forEach(([asset, amount]) => {
+            if (amount > 0) {
+                const value = amount * (asset === this.currentAsset ? this.currentPrice : this.getAssetPrice(asset));
+                const element = document.createElement('div');
+                element.className = 'portfolio-item';
+                element.innerHTML = `
+                    <span class="asset">${asset}</span>
+                    <span class="amount">${amount.toFixed(4)}</span>
+                    <span class="value">${value.toFixed(2)} USDT</span>
+                `;
+                portfolioGrid.appendChild(element);
+            }
+        });
+
+        if (portfolioGrid.children.length === 0) {
+            portfolioGrid.innerHTML = '<div class="empty-portfolio">Активы отсутствуют</div>';
+        }
+
+        // История сделок
+        this.updateTradeHistory();
+    }
+
+    getAssetPrice(asset) {
+        // Для упрощения используем текущую цену для всех активов
+        // В реальном приложении здесь был бы запрос к API
+        switch (asset) {
+            case 'BTC': return 50000;
+            case 'ETH': return 3000;
+            case 'SOL': return 100;
+            default: return 1;
+        }
+    }
+
+    updateTradeHistory() {
+        const historyList = document.getElementById('trade-history');
+        historyList.innerHTML = '';
+        
+        const recentTrades = this.tradeHistory.slice(-10).reverse();
+        
+        recentTrades.forEach(trade => {
+            const li = document.createElement('li');
+            li.className = `trade-item ${trade.type}`;
+            li.innerHTML = `
+                <span class="trade-type">${trade.type === 'buy' ? 'Куплено' : 'Продано'}</span>
+                <span class="trade-asset">${trade.amount} ${trade.asset}</span>
+                <span class="trade-price">по ${trade.price.toFixed(2)}</span>
+                <span class="trade-time">${trade.time.toLocaleTimeString()}</span>
+            `;
+            historyList.appendChild(li);
+        });
+
+        if (recentTrades.length === 0) {
+            historyList.innerHTML = '<li class="empty-history">История сделок пуста</li>';
+        }
+    }
+
+    async loadSavedData() {
+        try {
+            const saved = localStorage.getItem('tradingAppData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                this.balance = data.balance || this.balance;
+                this.portfolio = data.portfolio || this.portfolio;
+                this.tradeHistory = data.tradeHistory || this.tradeHistory;
+                this.achievements = data.achievements || this.achievements;
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+        }
+    }
+
+    saveData() {
+        const data = {
+            balance: this.balance,
+            portfolio: this.portfolio,
+            tradeHistory: this.tradeHistory,
+            achievements: this.achievements
+        };
+        localStorage.setItem('tradingAppData', JSON.stringify(data));
     }
 }
 
@@ -1094,66 +856,389 @@ class AchievementSystem {
         this.app = app;
         this.achievements = {
             firstTrade: {
-                title: "Первая сделка",
-                description: "Совершите первую торговую операцию",
-                icon: "🎯",
-                unlocked: false
+                title: 'Первая сделка',
+                description: 'Выполните вашу первую торговую операцию',
+                unlocked: app.achievements.firstTrade,
+                icon: '🥇'
             },
             profit10: {
-                title: "Профит +10%",
-                description: "Достигните прибыли +10% от начального депозита",
-                icon: "💰",
-                unlocked: false
+                title: 'Профит +10%',
+                description: 'Заработайте 10% прибыли от начального депозита',
+                unlocked: app.achievements.profit10,
+                icon: '💰'
+            },
+            portfolioDiversified: {
+                title: 'Диверсификация',
+                description: 'Владейте тремя разными активами одновременно',
+                unlocked: false,
+                icon: '🌐'
+            },
+            dayTrader: {
+                title: 'Дневной трейдер',
+                description: 'Выполните 10 сделок за один день',
+                unlocked: false,
+                icon: '📈'
             }
         };
     }
 
-    unlockAchievement(achievementId) {
-        if (this.achievements[achievementId] && !this.achievements[achievementId].unlocked) {
-            this.achievements[achievementId].unlocked = true;
-            this.app.achievements[achievementId] = true;
-            this.showAchievementNotification(achievementId);
-            this.displayAchievements();
-            this.app.saveData();
+    checkAchievements() {
+        // Первая сделка
+        if (!this.achievements.firstTrade.unlocked && this.app.tradeHistory.length > 0) {
+            this.unlockAchievement('firstTrade');
+        }
+
+        // Прибыль +10%
+        if (!this.achievements.profit10.unlocked) {
+            const initialBalance = 100.00;
+            const currentBalance = this.app.balance + 
+                Object.entries(this.app.portfolio).reduce((total, [asset, amount]) => {
+                    return total + (amount * this.app.getAssetPrice(asset));
+                }, 0);
+            
+            const profit = ((currentBalance - initialBalance) / initialBalance) * 100;
+            if (profit >= 10) {
+                this.unlockAchievement('profit10');
+            }
+        }
+
+        // Диверсификация
+        if (!this.achievements.portfolioDiversified.unlocked) {
+            const ownedAssets = Object.entries(this.app.portfolio).filter(([_, amount]) => amount > 0);
+            if (ownedAssets.length >= 3) {
+                this.unlockAchievement('portfolioDiversified');
+            }
+        }
+
+        // Дневной трейдер
+        if (!this.achievements.dayTrader.unlocked) {
+            const today = new Date().toDateString();
+            const todayTrades = this.app.tradeHistory.filter(trade => 
+                trade.time.toDateString() === today
+            );
+            if (todayTrades.length >= 10) {
+                this.unlockAchievement('dayTrader');
+            }
         }
     }
 
-    showAchievementNotification(achievementId) {
-        const achievement = this.achievements[achievementId];
-        this.app.teacher.showMessage(`🏆 Достижение разблокировано: ${achievement.title}! ${achievement.description}`);
+    unlockAchievement(achievementKey) {
+        this.achievements[achievementKey].unlocked = true;
+        this.app.achievements[achievementKey] = true;
+        
+        const achievement = this.achievements[achievementKey];
+        this.showAchievementPopup(achievement);
+        this.displayAchievements();
+        this.app.saveData();
+    }
+
+    showAchievementPopup(achievement) {
+        const popup = document.createElement('div');
+        popup.className = 'achievement-popup';
+        popup.innerHTML = `
+            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-content">
+                <h4>Достижение разблокировано!</h4>
+                <h3>${achievement.title}</h3>
+                <p>${achievement.description}</p>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        setTimeout(() => {
+            popup.classList.add('show');
+        }, 100);
+        
+        setTimeout(() => {
+            popup.classList.remove('show');
+            setTimeout(() => {
+                popup.remove();
+            }, 300);
+        }, 3000);
     }
 
     displayAchievements() {
-        const container = document.getElementById('achievements-container');
+        const container = document.getElementById('achievements-grid');
         container.innerHTML = '';
         
-        Object.entries(this.achievements).forEach(([id, achievement]) => {
-            const card = document.createElement('div');
-            card.className = `achievement-card ${achievement.unlocked ? 'unlocked' : 'locked'}`;
-            card.innerHTML = `
+        Object.values(this.achievements).forEach(achievement => {
+            const element = document.createElement('div');
+            element.className = `achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}`;
+            element.innerHTML = `
                 <div class="achievement-icon">${achievement.icon}</div>
-                <div class="achievement-title">${achievement.title}</div>
-                <div class="achievement-desc">${achievement.description}</div>
+                <div class="achievement-info">
+                    <h4>${achievement.title}</h4>
+                    <p>${achievement.description}</p>
+                </div>
+                <div class="achievement-status">
+                    ${achievement.unlocked ? '✅' : '🔒'}
+                </div>
             `;
-            container.appendChild(card);
+            container.appendChild(element);
+        });
+    }
+}
+
+class TradingTeacher {
+    constructor(app) {
+        this.app = app;
+        this.tips = [
+            {
+                condition: () => app.tradeHistory.length === 0,
+                message: 'Начните с небольшой покупки, чтобы освоиться с интерфейсом!',
+                level: 'beginner'
+            },
+            {
+                condition: () => app.priceChange < -2,
+                message: 'Цена упала более чем на 2%. Возможно, хорошая возможность для покупки?',
+                level: 'intermediate'
+            },
+            {
+                condition: () => app.priceChange > 5,
+                message: 'Сильный рост! Рассмотрите возможность фиксации части прибыли.',
+                level: 'intermediate'
+            },
+            {
+                condition: () => {
+                    const btcValue = app.portfolio.BTC * app.getAssetPrice('BTC');
+                    const totalValue = app.balance + btcValue + 
+                        app.portfolio.ETH * app.getAssetPrice('ETH') + 
+                        app.portfolio.SOL * app.getAssetPrice('SOL');
+                    return btcValue / totalValue > 0.7;
+                },
+                message: 'Ваш портфель сильно сконцентрирован на BTC. Рассмотрите диверсификацию.',
+                level: 'advanced'
+            }
+        ];
+    }
+
+    addInteractiveTips() {
+        this.showRandomTip();
+        
+        // Добавляем подсказки при наведении на элементы
+        this.addHoverTips();
+    }
+
+    showRandomTip() {
+        const availableTips = this.tips.filter(tip => tip.condition());
+        if (availableTips.length > 0) {
+            const randomTip = availableTips[Math.floor(Math.random() * availableTips.length)];
+            this.showMessage(randomTip.message, 'info');
+        }
+    }
+
+    showMessage(message, type = 'info') {
+        const messageBox = document.createElement('div');
+        messageBox.className = `teacher-message ${type}`;
+        messageBox.innerHTML = `
+            <span class="message-icon">💡</span>
+            <span class="message-text">${message}</span>
+            <button class="message-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        
+        document.getElementById('teacher-messages').appendChild(messageBox);
+        
+        setTimeout(() => {
+            if (messageBox.parentElement) {
+                messageBox.remove();
+            }
+        }, 5000);
+    }
+
+    addHoverTips() {
+        // Подсказки для элементов интерфейса
+        const elements = [
+            {
+                selector: '#buy-btn',
+                message: 'Купить актив по текущей рыночной цене',
+                position: 'top'
+            },
+            {
+                selector: '#sell-btn',
+                message: 'Продать актив по текущей рыночной цене',
+                position: 'top'
+            },
+            {
+                selector: '.timeframe-btn[data-tf="1h"]',
+                message: 'Часовой таймфрейм - хорош для краткосрочной торговли',
+                position: 'top'
+            },
+            {
+                selector: '.portfolio-item',
+                message: 'Нажмите для просмотра детальной информации об активе',
+                position: 'right'
+            }
+        ];
+
+        elements.forEach(({ selector, message, position }) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.addEventListener('mouseenter', (e) => {
+                    this.showTooltip(e.target, message, position);
+                });
+                element.addEventListener('mouseleave', () => {
+                    this.hideTooltip();
+                });
+            }
         });
     }
 
-    checkAchievements() {
-        // Проверка достижения прибыли +10%
-        const totalValue = this.app.calculateTotalValue();
-        if (totalValue >= 110 && !this.achievements.profit10.unlocked) {
-            this.unlockAchievement('profit10');
+    showTooltip(element, message, position) {
+        let tooltip = document.getElementById('teacher-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.id = 'teacher-tooltip';
+            tooltip.className = 'teacher-tooltip';
+            document.body.appendChild(tooltip);
+        }
+
+        tooltip.textContent = message;
+        tooltip.style.display = 'block';
+
+        const rect = element.getBoundingClientRect();
+        switch (position) {
+            case 'top':
+                tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+                tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+                break;
+            case 'right':
+                tooltip.style.top = (rect.top + rect.height / 2 - tooltip.offsetHeight / 2) + 'px';
+                tooltip.style.left = (rect.right + 10) + 'px';
+                break;
+        }
+    }
+
+    hideTooltip() {
+        const tooltip = document.getElementById('teacher-tooltip');
+        if (tooltip) {
+            tooltip.style.display = 'none';
         }
     }
 }
 
+class OrderManager {
+    constructor(app) {
+        this.app = app;
+        this.orders = [];
+    }
+
+    placeOrder(type, asset, amount, price, orderType = 'limit') {
+        const order = {
+            id: Date.now(),
+            type,
+            asset,
+            amount,
+            price,
+            orderType,
+            status: 'open',
+            createdAt: new Date()
+        };
+
+        this.orders.push(order);
+        this.updateOrdersUI();
+        return order;
+    }
+
+    cancelOrder(orderId) {
+        const orderIndex = this.orders.findIndex(order => order.id === orderId);
+        if (orderIndex !== -1) {
+            this.orders[orderIndex].status = 'cancelled';
+            this.updateOrdersUI();
+            return true;
+        }
+        return false;
+    }
+
+    updateOrdersUI() {
+        const ordersGrid = document.getElementById('orders-grid');
+        ordersGrid.innerHTML = '';
+
+        const openOrders = this.orders.filter(order => order.status === 'open');
+
+        if (openOrders.length === 0) {
+            ordersGrid.innerHTML = '<div class="empty-orders">Активные ордера отсутствуют</div>';
+            return;
+        }
+
+        openOrders.forEach(order => {
+            const orderElement = document.createElement('div');
+            orderElement.className = `order-item ${order.type}`;
+            orderElement.innerHTML = `
+                <div class="order-header">
+                    <span class="order-type">${order.type === 'buy' ? 'Покупка' : 'Продажа'}</span>
+                    <span class="order-asset">${order.asset}</span>
+                    <button class="cancel-order" onclick="app.orderManager.cancelOrder(${order.id})">×</button>
+                </div>
+                <div class="order-details">
+                    <span>Количество: ${order.amount.toFixed(4)}</span>
+                    <span>Цена: ${order.price.toFixed(2)} USDT</span>
+                    <span>Всего: ${(order.amount * order.price).toFixed(2)} USDT</span>
+                </div>
+                <div class="order-footer">
+                    <span>${order.createdAt.toLocaleTimeString()}</span>
+                </div>
+            `;
+            ordersGrid.appendChild(orderElement);
+        });
+    }
+}
+
+class RiskManager {
+    constructor(app) {
+        this.app = app;
+        this.settings = {
+            maxPositionSize: 0.5, // Макс. размер позиции (50% от баланса)
+            stopLoss: 0.1,        // Стоп-лосс 10%
+            takeProfit: 0.2       // Тейк-профит 20%
+        };
+    }
+
+    calculatePositionSize(price) {
+        const maxAmount = (this.app.balance * this.settings.maxPositionSize) / price;
+        return maxAmount;
+    }
+
+    validateTrade(type, amount, price) {
+        const errors = [];
+
+        if (type === 'buy') {
+            const totalCost = amount * price * 1.001;
+            if (totalCost > this.app.balance) {
+                errors.push('Недостаточно средств');
+            }
+
+            if (amount * price > this.app.balance * this.settings.maxPositionSize) {
+                errors.push(`Размер позиции превышает максимальный лимит (${this.settings.maxPositionSize * 100}% от баланса)`);
+            }
+        } else {
+            if (amount > this.app.portfolio[this.app.currentAsset]) {
+                errors.push('Недостаточно активов для продажи');
+            }
+        }
+
+        if (amount <= 0) {
+            errors.push('Некорректное количество');
+        }
+
+        return errors;
+    }
+
+    calculateRiskReward(entryPrice, stopLoss, takeProfit) {
+        const risk = Math.abs(entryPrice - stopLoss);
+        const reward = Math.abs(takeProfit - entryPrice);
+        return reward / risk;
+    }
+}
+
 // Инициализация приложения
-let app;
+const app = new TradingApp();
 
-document.addEventListener('DOMContentLoaded', () => {
-    app = new TradingApp();
-});
+// Глобальные функции для использования в HTML
+window.showSection = function(section) {
+    app.showSection(section);
+};
 
-// Глобальные функции для обработчиков событий
-window.app = app;
+window.hideAllSections = function() {
+    app.hideAllSections();
+};
