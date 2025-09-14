@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TradeLearn - Симулятор трейдинга</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.1/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -88,9 +88,9 @@
                     
                     <div class="chart-container">
                         <div id="candleChart"></div>
-                        <div class="chart-loader" id="chartLoader">Загрузка графика...</div>
                         <div class="loading-overlay" id="chartLoadingOverlay" style="display: none;">
                             <div class="loader-spinner"></div>
+                            <div>Загрузка графика...</div>
                         </div>
                     </div>
 
@@ -113,7 +113,7 @@
                 <!-- Контент секций (скрыт по умолчанию) -->
                 <div class="content-sections">
                     <!-- Учитель -->
-                    <div class="content-section" id="teacher-section">
+                    <div class="content-section" id="teacher-section" style="display: none;">
                         <div class="section-header">
                             <h3>🎓 Учитель по трейдингу</h3>
                             <button class="close-section">✕</button>
@@ -154,7 +154,7 @@
                     </div>
 
                     <!-- Торговля -->
-                    <div class="content-section" id="trading-section">
+                    <div class="content-section" id="trading-section" style="display: none;">
                         <div class="section-header">
                             <h3>⚡ Торговля</h3>
                             <button class="close-section">✕</button>
@@ -181,7 +181,7 @@
                     </div>
 
                     <!-- Ордера -->
-                    <div class="content-section" id="orders-section">
+                    <div class="content-section" id="orders-section" style="display: none;">
                         <div class="section-header">
                             <h3>🎯 Ордера</h3>
                             <button class="close-section">✕</button>
@@ -216,7 +216,7 @@
                     </div>
 
                     <!-- Риски -->
-                    <div class="content-section" id="risk-section">
+                    <div class="content-section" id="risk-section" style="display: none;">
                         <div class="section-header">
                             <h3>🧮 Калькулятор риска</h3>
                             <button class="close-section">✕</button>
@@ -253,7 +253,7 @@
                     </div>
 
                     <!-- Портфель -->
-                    <div class="content-section" id="portfolio-section">
+                    <div class="content-section" id="portfolio-section" style="display: none;">
                         <div class="section-header">
                             <h3>💼 Портфель</h3>
                             <button class="close-section">✕</button>
@@ -279,7 +279,7 @@
                     </div>
 
                     <!-- История -->
-                    <div class="content-section" id="history-section">
+                    <div class="content-section" id="history-section" style="display: none;">
                         <div class="section-header">
                             <h3>📋 История сделок</h3>
                             <button class="close-section">✕</button>
@@ -290,7 +290,7 @@
                     </div>
 
                     <!-- Достижения -->
-                    <div class="content-section" id="achievements-section">
+                    <div class="content-section" id="achievements-section" style="display: none;">
                         <div class="section-header">
                             <h3>🏆 Достижения</h3>
                             <button class="close-section">✕</button>
@@ -310,7 +310,7 @@
                     </div>
 
                     <!-- Статистика -->
-                    <div class="content-section" id="stats-section">
+                    <div class="content-section" id="stats-section" style="display: none;">
                         <div class="section-header">
                             <h3>📊 Статистика</h3>
                             <button class="close-section">✕</button>
@@ -329,7 +329,7 @@
                     </div>
 
                     <!-- Данные -->
-                    <div class="content-section" id="data-section">
+                    <div class="content-section" id="data-section" style="display: none;">
                         <div class="section-header">
                             <h3>💾 Данные</h3>
                             <button class="close-section">✕</button>
