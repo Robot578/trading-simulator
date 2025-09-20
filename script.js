@@ -13,6 +13,13 @@ let activeOrders = [];
 let currentAsset = 'BTC';
 let currentTimeframe = '1h';
 
+// Переменные для рисования
+let drawingTool = null;
+let drawingColor = '#2962ff';
+let drawingSeries = [];
+let isDrawing = false;
+let drawingStartPoint = null;
+
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -91,6 +98,42 @@ function setupEventListeners() {
     
     // Ордера
     document.getElementById('create-order-btn').addEventListener('click', createOrder);
+    
+    // Инструменты рисования
+    setupDrawingTools();
+}
+
+// Настройка инструментов рисования
+function setupDrawingTools() {
+    // Кнопки инструментов
+    document.querySelectorAll('.drawing-tool-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tool = e.currentTarget.dataset.tool;
+            
+            if (tool === drawingTool) {
+                // Если инструмент уже активен, деактивируем его
+                drawingTool = null;
+                e.currentTarget.classList.remove('active');
+            } else {
+                // Активируем новый инструмент
+                document.querySelectorAll('.drawing-tool-btn').forEach(b => b.classList.remove('active'));
+                drawingTool = tool;
+                e.currentTarget.classList.add('active');
+            }
+        });
+    });
+    
+    // Выбор цвета
+    document.querySelectorAll('.color-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            document.querySelectorAll('.color-option').forEach(o => o.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            drawingColor = e.currentTarget.dataset.color;
+        });
+    });
+    
+    // Кнопка очистки
+    document.getElementById('clear-drawings').addEventListener('click', clearAllDrawings);
 }
 
 // Инициализация графика
@@ -155,12 +198,121 @@ function initializeChart() {
         }
     });
     
+    // Обработка кликов для рисования
+    chartContainer.addEventListener('mousedown', handleDrawingStart);
+    chartContainer.addEventListener('mousemove', handleDrawingMove);
+    chartContainer.addEventListener('mouseup', handleDrawingEnd);
+    chartContainer.addEventListener('mouseleave', handleDrawingEnd);
+    
     // Обработка ресайза
     new ResizeObserver(entries => {
         if (entries.length === 0) return;
         const { width, height } = entries[0].contentRect;
         chart.applyOptions({ width, height });
     }).observe(chartContainer);
+}
+
+// Обработка начала рисования
+function handleDrawingStart(event) {
+    if (!drawingTool) return;
+    
+    const rect = event.target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    const coordinate = chart.timeScale().coordinateToLogical(x);
+    const price = chart.priceScale('left').coordinateToPrice(y);
+    
+    if (coordinate && price) {
+        isDrawing = true;
+        drawingStartPoint = { x, y, coordinate, price };
+        
+        // Создаем новую серию для рисования
+        if (drawingTool === 'line' || drawingTool === 'ray') {
+            const lineSeries = chart.addLineSeries({
+                color: drawingColor,
+                lineWidth: 2,
+                lineStyle: drawingTool === 'ray' ? 2 : 0, // Пунктир для луча
+                priceScaleId: 'left',
+            });
+            drawingSeries.push(lineSeries);
+        } else if (drawingTool === 'horizontal') {
+            const lineSeries = chart.addLineSeries({
+                color: drawingColor,
+                lineWidth: 1,
+                lineStyle: 2, // Пунктир
+                priceScaleId: 'left',
+            });
+            drawingSeries.push(lineSeries);
+        }
+    }
+}
+
+// Обработка движения мыши при рисовании
+function handleDrawingMove(event) {
+    if (!isDrawing || !drawingStartPoint) return;
+    
+    const rect = event.target.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    const coordinate = chart.timeScale().coordinateToLogical(x);
+    const price = chart.priceScale('left').coordinateToPrice(y);
+    
+    if (coordinate && price) {
+        const currentSeries = drawingSeries[drawingSeries.length - 1];
+        
+        if (drawingTool === 'line') {
+            // Рисуем линию между начальной и текущей точкой
+            currentSeries.setData([
+                { time: drawingStartPoint.coordinate, value: drawingStartPoint.price },
+                { time: coordinate, value: price }
+            ]);
+        } else if (drawingTool === 'ray') {
+            // Рисуем луч (бесконечную линию)
+            const timeScale = chart.timeScale();
+            const visibleRange = timeScale.getVisibleRange();
+            
+            if (visibleRange) {
+                // Рассчитываем угол луча
+                const dx = coordinate - drawingStartPoint.coordinate;
+                const dy = price - drawingStartPoint.price;
+                
+                if (dx !== 0) {
+                    const slope = dy / dx;
+                    const startValue = drawingStartPoint.price - slope * drawingStartPoint.coordinate;
+                    
+                    // Создаем точки для отрисовки луча по всей видимой области
+                    const lineData = [
+                        { time: visibleRange.from, value: startValue + slope * visibleRange.from },
+                        { time: visibleRange.to, value: startValue + slope * visibleRange.to }
+                    ];
+                    
+                    currentSeries.setData(lineData);
+                }
+            }
+        } else if (drawingTool === 'horizontal') {
+            // Горизонтальная линия
+            currentSeries.setData([
+                { time: drawingStartPoint.coordinate, value: drawingStartPoint.price },
+                { time: coordinate, value: drawingStartPoint.price }
+            ]);
+        }
+    }
+}
+
+// Обработка окончания рисования
+function handleDrawingEnd() {
+    isDrawing = false;
+    drawingStartPoint = null;
+}
+
+// Очистка всех рисунков
+function clearAllDrawings() {
+    drawingSeries.forEach(series => {
+        chart.removeSeries(series);
+    });
+    drawingSeries = [];
 }
 
 // Загрузка данных графика
@@ -271,167 +423,183 @@ function updateCurrentPrice(bar) {
 
 // Рассчитать индикаторы
 function calculateIndicators(data) {
-    // Здесь будет расчет SMA, EMA, RSI и других индикаторов
-    // Пока просто заглушка
+    // Здесь будет расчет SMA, EMA и других индикаторов
+    const smaData = calculateSMA(data, 20);
+    const emaData = calculateEMA(data, 20);
+    
+    // Обновление графиков индикаторов
+    updateIndicatorSeries('sma', smaData);
+    updateIndicatorSeries('ema', emaData);
+}
+
+// Расчет SMA
+function calculateSMA(data, period) {
+    const result = [];
+    for (let i = period - 1; i < data.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+            sum += data[i - j].close;
+        }
+        result.push({
+            time: data[i].time,
+            value: sum / period
+        });
+    }
+    return result;
+}
+
+// Расчет EMA
+function calculateEMA(data, period) {
+    const result = [];
+    const k = 2 / (period + 1);
+    let ema = data[0].close;
+    
+    result.push({ time: data[0].time, value: ema });
+    
+    for (let i = 1; i < data.length; i++) {
+        ema = (data[i].close - ema) * k + ema;
+        result.push({ time: data[i].time, value: ema });
+    }
+    return result;
+}
+
+// Обновление серий индикаторов
+function updateIndicatorSeries(indicator, data) {
+    // Здесь будет обновление графиков индикаторов
 }
 
 // Показать подсказку
 function showTooltip(x, y, data) {
-    const tooltip = document.getElementById('chart-tooltip');
+    const tooltip = document.getElementById('chartTooltip');
     if (!tooltip) return;
-    
-    const change = ((data.close - data.open) / data.open) * 100;
-    const changeClass = change >= 0 ? 'profit' : 'loss';
     
     tooltip.innerHTML = `
         <div class="tooltip-header">${new Date(data.time * 1000).toLocaleString()}</div>
         <div class="tooltip-content">
             <span class="tooltip-label">Open:</span>
             <span class="tooltip-value">${data.open.toFixed(2)}</span>
-            
             <span class="tooltip-label">High:</span>
             <span class="tooltip-value">${data.high.toFixed(2)}</span>
-            
             <span class="tooltip-label">Low:</span>
             <span class="tooltip-value">${data.low.toFixed(2)}</span>
-            
             <span class="tooltip-label">Close:</span>
             <span class="tooltip-value">${data.close.toFixed(2)}</span>
-            
-            <span class="tooltip-label">Change:</span>
-            <span class="tooltip-value ${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</span>
         </div>
     `;
     
-    const chartContainer = document.querySelector('.chart-container');
-    const rect = chartContainer.getBoundingClientRect();
-    
-    tooltip.style.left = (x + rect.left) + 'px';
-    tooltip.style.top = (y + rect.top - 100) + 'px';
+    tooltip.style.left = (x + 10) + 'px';
+    tooltip.style.top = (y + 10) + 'px';
     tooltip.style.display = 'block';
 }
 
 // Скрыть подсказку
 function hideTooltip() {
-    const tooltip = document.getElementById('chart-tooltip');
+    const tooltip = document.getElementById('chartTooltip');
     if (tooltip) {
         tooltip.style.display = 'none';
     }
 }
 
-// Выполнить сделку
+// Исполнение сделки
 function executeTrade(type) {
-    const amount = parseFloat(document.getElementById('trade-amount').value);
-    const currentPrice = currentData[currentData.length - 1].close;
+    const amount = parseFloat(document.getElementById('trade-amount').value) || 0;
+    const price = currentData[currentData.length - 1].close;
     
-    if (isNaN(amount) || amount <= 0) {
-        showError('Введите корректную сумму');
+    if (amount <= 0) {
+        alert('Введите корректную сумму');
         return;
     }
     
+    const cost = amount * price;
+    
     if (type === 'buy') {
-        if (amount > balance) {
-            showError('Недостаточно средств');
+        if (cost > balance) {
+            alert('Недостаточно средств');
             return;
         }
-        
-        const assetAmount = amount / currentPrice;
-        portfolio[currentAsset] = (portfolio[currentAsset] || 0) + assetAmount;
-        balance -= amount;
-        
-        tradeHistory.push({
-            type: 'buy',
-            asset: currentAsset,
-            amount: assetAmount,
-            price: currentPrice,
-            total: amount,
-            timestamp: Date.now()
-        });
-        
-    } else if (type === 'sell') {
-        const assetAmount = amount / currentPrice;
-        
-        if (assetAmount > (portfolio[currentAsset] || 0)) {
-            showError('Недостаточно актива');
+        balance -= cost;
+        portfolio[currentAsset] = (portfolio[currentAsset] || 0) + amount;
+    } else {
+        if (amount > (portfolio[currentAsset] || 0)) {
+            alert('Недостаточно активов');
             return;
         }
-        
-        portfolio[currentAsset] = (portfolio[currentAsset] || 0) - assetAmount;
-        balance += amount;
-        
-        tradeHistory.push({
-            type: 'sell',
-            asset: currentAsset,
-            amount: assetAmount,
-            price: currentPrice,
-            total: amount,
-            timestamp: Date.now()
-        });
+        balance += cost;
+        portfolio[currentAsset] = (portfolio[currentAsset] || 0) - amount;
     }
+    
+    // Добавляем в историю
+    tradeHistory.unshift({
+        type: type,
+        asset: currentAsset,
+        amount: amount,
+        price: price,
+        total: cost,
+        timestamp: Date.now(),
+        profit: type === 'sell' ? cost - (amount * (portfolio.avgPrice || price)) : 0
+    });
     
     updateUI();
     saveToLocalStorage();
-    showTeacherHint();
 }
 
-// Купить на все средства
+// Покупка на все средства
 function buyMax() {
-    const currentPrice = currentData[currentData.length - 1].close;
-    const maxAmount = balance;
-    document.getElementById('trade-amount').value = maxAmount.toFixed(2);
-    executeTrade('buy');
+    const price = currentData[currentData.length - 1].close;
+    const maxAmount = balance / price;
+    document.getElementById('trade-amount').value = maxAmount.toFixed(4);
 }
 
-// Рассчитать риск
+// Расчет риска
 function calculateRisk() {
-    const deposit = parseFloat(document.getElementById('risk-deposit').value);
-    const riskPercent = parseFloat(document.getElementById('risk-percent').value);
-    const entryPrice = parseFloat(document.getElementById('risk-entry').value);
-    const stopPrice = parseFloat(document.getElementById('risk-stop').value);
-    
-    if (isNaN(deposit) || isNaN(riskPercent) || isNaN(entryPrice) || isNaN(stopPrice)) {
-        showError('Заполните все поля');
-        return;
-    }
-    
-    const riskAmount = deposit * (riskPercent / 100);
-    const priceDifference = Math.abs(entryPrice - stopPrice);
-    const volume = riskAmount / priceDifference;
-    
-    document.getElementById('risk-volume').textContent = volume.toFixed(6);
-    document.getElementById('risk-amount').textContent = riskAmount.toFixed(2) + ' USDT';
+    // Реализация расчета риска
+    alert('Функция расчета риска будет реализована в будущем');
 }
 
 // Показать подсказку учителя
 function showTeacherHint() {
-    const messages = [
-        "Помните о стоп-лоссах! Рискуйте не более 2% от депозита.",
-        "Анализируйте график перед совершением сделки.",
-        "Не поддавайтесь эмоциям - торгуйте по плану.",
+    const hints = [
+        "Обратите внимание на уровни поддержки и сопротивления на графике.",
+        "Объемы торгов могут указывать на силу движения цены.",
+        "Используйте стоп-лоссы для управления рисками.",
         "Диверсифицируйте портфель для снижения рисков.",
-        "Изучайте основы технического анализа."
+        "Анализируйте тренды перед принятием торговых решений."
     ];
     
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    document.getElementById('teacher-message').textContent = randomMessage;
+    const randomHint = hints[Math.floor(Math.random() * hints.length)];
+    document.getElementById('teacher-message').textContent = randomHint;
 }
 
 // Показать анализ учителя
 function showTeacherAnalysis() {
-    const currentPrice = currentData[currentData.length - 1].close;
-    const analysis = `Текущая цена ${currentAsset}: ${currentPrice.toFixed(2)}. `;
+    const lastBar = currentData[currentData.length - 1];
+    const prevBar = currentData[currentData.length - 2];
     
-    document.getElementById('teacher-message').textContent = analysis + "Рекомендую изучить график и индикаторы.";
+    let analysis = `Текущая цена: ${lastBar.close.toFixed(2)}. `;
+    
+    if (lastBar.close > prevBar.close) {
+        analysis += "Бычье движение. Возможен рост. ";
+    } else {
+        analysis += "Медвежье движение. Возможен спад. ";
+    }
+    
+    if (Math.abs(lastBar.close - prevBar.close) / prevBar.close > 0.03) {
+        analysis += "Сильное движение! Будьте осторожны с рисками.";
+    } else {
+        analysis += "Движение в пределах нормы.";
+    }
+    
+    document.getElementById('teacher-message').textContent = analysis;
 }
 
 // Показать урок учителя
 function showTeacherLesson() {
     const lessons = [
-        "Урок: Основы свечного анализа - научитесь читать японские свечи.",
-        "Урок: Индикаторы RSI и MACD - как использовать в торговле.",
-        "Урок: Управление рисками - ключ к успешному трейдингу.",
-        "Урок: Психология трейдинга - контролируйте эмоции.",
-        "Урок: Построение торговой стратегии - с нуля до профи."
+        "Уровни поддержки и сопротивления: это ценовые уровни, где покупатели или продавцы входят в рынок в большом количестве.",
+        "Скользящие средние: помогают определить направление тренда и возможные точки разворота.",
+        "RSI (Relative Strength Index): индикатор, показывающий перекупленность или перепроданность актива.",
+        "Объемы торгов: высокие объемы подтверждают силу движения цены.",
+        "Стоп-лосс: ордер для ограничения убытков при неблагоприятном движении цены."
     ];
     
     const randomLesson = lessons[Math.floor(Math.random() * lessons.length)];
@@ -444,82 +612,24 @@ function toggleDictionary() {
     dictionary.style.display = dictionary.style.display === 'none' ? 'block' : 'none';
 }
 
-// Создать ордер
-function createOrder() {
-    const orderType = document.getElementById('order-type').value;
-    const orderPrice = parseFloat(document.getElementById('order-price').value);
-    const orderAmount = parseFloat(document.getElementById('order-amount').value);
-    
-    if (isNaN(orderPrice) || isNaN(orderAmount) || orderPrice <= 0 || orderAmount <= 0) {
-        showError('Заполните все поля корректно');
-        return;
-    }
-    
-    activeOrders.push({
-        type: orderType,
-        price: orderPrice,
-        amount: orderAmount,
-        asset: currentAsset,
-        timestamp: Date.now()
-    });
-    
-    updateOrdersList();
-    saveToLocalStorage();
-    
-    // Очищаем поля
-    document.getElementById('order-price').value = '';
-    document.getElementById('order-amount').value = '';
-}
-
-// Обновить список ордеров
-function updateOrdersList() {
-    const container = document.getElementById('orders-container');
-    
-    if (activeOrders.length === 0) {
-        container.innerHTML = '<div class="empty-orders">Активных ордеров нет</div>';
-        return;
-    }
-    
-    container.innerHTML = activeOrders.map((order, index) => `
-        <div class="order-item ${order.type.toLowerCase().replace('_', '-')}">
-            <div class="order-info">
-                <div class="order-type">${order.type === 'STOP' ? 'Стоп-лосс' : 'Тейк-профит'}</div>
-                <div class="order-details">
-                    ${order.asset} | Цена: ${order.price.toFixed(2)} | Объем: ${order.amount.toFixed(6)}
-                </div>
-            </div>
-            <div class="order-actions">
-                <button class="order-cancel-btn" onclick="cancelOrder(${index})">Отмена</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Отменить ордер
-function cancelOrder(index) {
-    activeOrders.splice(index, 1);
-    updateOrdersList();
-    saveToLocalStorage();
-}
-
 // Экспорт данных
 function exportData() {
     const data = {
-        balance,
-        portfolio,
-        tradeHistory,
-        activeOrders
+        balance: balance,
+        portfolio: portfolio,
+        tradeHistory: tradeHistory,
+        activeOrders: activeOrders
     };
     
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const dataStr = JSON.stringify(data);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tradelearn-data.json';
-    a.click();
+    const exportFileDefaultName = 'trading-data.json';
     
-    URL.revokeObjectURL(url);
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
 }
 
 // Импорт данных
@@ -531,7 +641,6 @@ function importData(event) {
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
-            
             balance = data.balance || balance;
             portfolio = data.portfolio || portfolio;
             tradeHistory = data.tradeHistory || tradeHistory;
@@ -539,20 +648,17 @@ function importData(event) {
             
             updateUI();
             saveToLocalStorage();
-            showError('Данные успешно импортированы');
-            
+            alert('Данные успешно импортированы!');
         } catch (error) {
-            showError('Ошибка при импорте данных');
+            alert('Ошибка при импорте данных: ' + error.message);
         }
     };
-    
     reader.readAsText(file);
-    event.target.value = '';
 }
 
 // Сброс данных
 function resetData() {
-    if (confirm('Вы уверены? Все данные будут удалены.')) {
+    if (confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
         balance = 100.00;
         portfolio = { 'BTC': 0, 'ETH': 0, 'SOL': 0 };
         tradeHistory = [];
@@ -560,89 +666,128 @@ function resetData() {
         
         updateUI();
         saveToLocalStorage();
-        showError('Данные сброшены');
     }
 }
 
-// Обновление интерфейса
-function updateUI() {
-    // Баланс
-    document.getElementById('balance').textContent = balance.toFixed(2) + ' USDT';
-    
-    // Портфель
-    document.getElementById('btc-amount').textContent = portfolio.BTC.toFixed(6);
-    document.getElementById('eth-amount').textContent = portfolio.ETH.toFixed(6);
-    document.getElementById('sol-amount').textContent = portfolio.SOL.toFixed(6);
-    
-    // Общая стоимость
-    const currentPrice = currentData.length > 0 ? currentData[currentData.length - 1].close : 0;
-    const totalValue = balance + (portfolio.BTC * currentPrice) + (portfolio.ETH * currentPrice * 0.05) + (portfolio.SOL * currentPrice * 0.001);
-    document.getElementById('total-value').textContent = totalValue.toFixed(2) + ' USDT';
-    
-    // История
-    updateHistoryList();
-    
-    // Ордера
-    updateOrdersList();
-    
-    // Статистика
-    updateStatistics();
+// Создание ордера
+function createOrder() {
+    // Реализация создания ордера
+    alert('Функция создания ордера будет реализована в будущем');
 }
 
-// Обновить историю сделок
-function updateHistoryList() {
-    const container = document.getElementById('history-items');
+// Обновление UI
+function updateUI() {
+    // Обновление баланса
+    document.getElementById('balance-amount').textContent = balance.toFixed(2) + ' USD';
+    
+    // Обновление портфеля
+    updatePortfolioDisplay();
+    
+    // Обновление истории
+    updateHistoryDisplay();
+    
+    // Обновление ордеров
+    updateOrdersDisplay();
+}
+
+// Обновление отображения портфеля
+function updatePortfolioDisplay() {
+    const portfolioGrid = document.getElementById('portfolio-grid');
+    if (!portfolioGrid) return;
+    
+    let totalValue = balance;
+    let html = '';
+    
+    for (const [asset, amount] of Object.entries(portfolio)) {
+        if (amount > 0) {
+            const price = currentData.length > 0 ? currentData[currentData.length - 1].close : 0;
+            const value = amount * price;
+            totalValue += value;
+            
+            html += `
+                <div class="portfolio-item">
+                    <span>${asset}</span>
+                    <span>${amount.toFixed(4)} (${value.toFixed(2)} USD)</span>
+                </div>
+            `;
+        }
+    }
+    
+    html += `
+        <div class="portfolio-item total">
+            <span>Общий баланс</span>
+            <span>${totalValue.toFixed(2)} USD</span>
+        </div>
+    `;
+    
+    portfolioGrid.innerHTML = html;
+}
+
+// Обновление отображения истории
+function updateHistoryDisplay() {
+    const historyList = document.getElementById('history-list');
+    if (!historyList) return;
     
     if (tradeHistory.length === 0) {
-        container.innerHTML = '<div class="empty-history">Сделок пока нет</div>';
+        historyList.innerHTML = '<div class="empty-history">Нет истории сделок</div>';
         return;
     }
     
-    container.innerHTML = tradeHistory.slice().reverse().map(trade => `
-        <div class="history-item ${trade.type === 'buy' ? '' : 'loss'}">
-            <div class="history-info">
-                <div class="history-type">${trade.type === 'buy' ? 'Покупка' : 'Продажа'} ${trade.asset}</div>
-                <div class="history-details">
-                    ${new Date(trade.timestamp).toLocaleString()} | 
-                    Цена: ${trade.price.toFixed(2)} | 
-                    Объем: ${trade.amount.toFixed(6)}
+    let html = '';
+    tradeHistory.slice(0, 10).forEach(trade => {
+        const isProfit = trade.type === 'sell' && trade.profit > 0;
+        const isLoss = trade.type === 'sell' && trade.profit <= 0;
+        
+        html += `
+            <div class="history-item ${isLoss ? 'loss' : ''}">
+                <div class="history-info">
+                    <span class="history-type">${trade.type === 'buy' ? 'Покупка' : 'Продажа'} ${trade.asset}</span>
+                    <span class="history-details">
+                        ${trade.amount.toFixed(4)} по ${trade.price.toFixed(2)} USD
+                    </span>
                 </div>
+                <span class="history-amount ${isProfit ? 'profit' : isLoss ? 'loss' : ''}">
+                    ${trade.type === 'buy' ? '-' : '+'}${trade.total.toFixed(2)} USD
+                    ${trade.type === 'sell' && `(${trade.profit >= 0 ? '+' : ''}${trade.profit.toFixed(2)})`}
+                </span>
             </div>
-            <div class="history-amount ${trade.type === 'buy' ? 'loss' : 'profit'}">
-                ${trade.type === 'buy' ? '-' : '+'}${trade.total.toFixed(2)} USDT
-            </div>
-        </div>
-    `).join('');
-}
-
-// Обновить статистику
-function updateStatistics() {
-    const totalTrades = tradeHistory.length;
-    const winningTrades = tradeHistory.filter(trade => trade.type === 'sell').length;
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
+        `;
+    });
     
-    document.getElementById('total-trades').querySelector('.stat-value').textContent = totalTrades;
-    document.getElementById('win-rate').querySelector('.stat-value').textContent = winRate.toFixed(1) + '%';
+    historyList.innerHTML = html;
 }
 
-// Сохранить в localStorage
+// Обновление отображения ордеров
+function updateOrdersDisplay() {
+    const ordersList = document.getElementById('orders-list');
+    if (!ordersList) return;
+    
+    if (activeOrders.length === 0) {
+        ordersList.innerHTML = '<div class="empty-orders">Нет активных ордеров</div>';
+        return;
+    }
+    
+    // Здесь будет обновление списка ордеров
+}
+
+// Сохранение в localStorage
 function saveToLocalStorage() {
     const data = {
-        balance,
-        portfolio,
-        tradeHistory,
-        activeOrders
+        balance: balance,
+        portfolio: portfolio,
+        tradeHistory: tradeHistory,
+        activeOrders: activeOrders
     };
     
-    localStorage.setItem('tradelearn_data', JSON.stringify(data));
+    localStorage.setItem('tradingAppData', JSON.stringify(data));
 }
 
-// Загрузить из localStorage
+// Загрузка из localStorage
 function loadFromLocalStorage() {
-    const saved = localStorage.getItem('tradelearn_data');
-    if (saved) {
+    const savedData = localStorage.getItem('tradingAppData');
+    if (savedData) {
         try {
-            const data = JSON.parse(saved);
+            const data = JSON.parse(savedData);
             balance = data.balance || balance;
             portfolio = data.portfolio || portfolio;
             tradeHistory = data.tradeHistory || tradeHistory;
@@ -653,5 +798,12 @@ function loadFromLocalStorage() {
     }
 }
 
-// Глобальные функции для обработки событий
-window.cancelOrder = cancelOrder;
+// Обновление статистики журнала
+function updateJournalStats() {
+    // Здесь будет обновление статистики журнала
+}
+
+// Обновление достижений
+function updateAchievements() {
+    // Здесь будет обновление достижений
+}
