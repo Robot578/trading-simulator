@@ -326,54 +326,48 @@ body {
     color: var(--text-secondary);
 }
 
-/* Панель инструментов рисования */
-.drawing-tools {
+/* Секции контента */
+.content-sections {
     display: flex;
-    gap: 10px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-    background-color: var(--surface-light);
-    padding: 10px;
-    border-radius: 8px;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.drawing-tool-btn {
+.content-section {
     background-color: var(--surface);
-    color: var(--text-secondary);
-    border: 1px solid var(--divider);
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.8rem;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.drawing-tool-btn:hover {
-    background-color: var(--primary);
-    color: var(--text-primary);
-}
-
-.drawing-tool-btn.active {
-    background-color: var(--primary);
-    color: var(--text-primary);
-}
-
-.drawing-color-picker {
+.section-header {
     display: flex;
-    gap: 5px;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--divider);
 }
 
-.color-option {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
+.section-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.close-section {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
     cursor: pointer;
-    border: 2px solid transparent;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
 }
 
-.color-option.active {
-    border-color: var(--text-primary);
+.close-section:hover {
+    background-color: var(--surface-light);
+    color: var(--text-primary);
 }
 
 /* Стили для учителя */
@@ -886,10 +880,6 @@ body {
     .achievements-grid {
         grid-template-columns: 1fr;
     }
-    
-    .drawing-tools {
-        justify-content: center;
-    }
 }
 
 @media (max-width: 480px) {
@@ -909,10 +899,5 @@ body {
     
     .journal-stats {
         grid-template-columns: 1fr 1fr;
-    }
-    
-    .drawing-tools {
-        flex-direction: column;
-        align-items: center;
     }
 }
