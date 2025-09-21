@@ -824,6 +824,78 @@ body {
     font-weight: 600;
 }
 
+/* Стили для учителя */
+.teacher-questions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--divider);
+}
+
+.question-input {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.teacher-lessons {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.lessons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.lesson-card {
+    background-color: var(--background);
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary);
+}
+
+.lesson-card:hover {
+    background-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.lesson-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 5px;
+}
+
+.lesson-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: block;
+}
+
+.term-details {
+    background-color: var(--surface-light);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+}
+
+#term-title {
+    color: var(--primary);
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+#term-description {
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .app-container {
@@ -880,6 +952,14 @@ body {
     .achievements-grid {
         grid-template-columns: 1fr;
     }
+    
+    .lessons-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dictionary-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -900,7 +980,9 @@ body {
     .journal-stats {
         grid-template-columns: 1fr 1fr;
     }
-}/* Дополнительные стили для индикаторов */
+}
+
+/* Дополнительные стили для индикаторов */
 .indicator-controls {
     display: flex;
     gap: 15px;
@@ -954,4 +1036,3 @@ body {
         justify-content: space-between;
     }
 }
-
