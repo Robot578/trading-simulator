@@ -1,130 +1,129 @@
-/* Добавлены новые стили */
+:root {
+    --primary: #2962ff;
+    --primary-dark: #0039cb;
+    --secondary: #ff6d00;
+    --secondary-dark: #c43c00;
+    --background: #121212;
+    --surface: #1e1e1e;
+    --surface-light: #2d2d2d;
+    --error: #cf6679;
+    --success: #00c853;
+    --warning: #ffab00;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-disabled: rgba(255, 255, 255, 0.5);
+    --divider: rgba(255, 255, 255, 0.12);
+    --profit: #00c853;
+    --loss: #ff5252;
+}
 
-/* Быстрая торговля в сайдбаре */
-.quick-trade {
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Сайдбар */
+.sidebar {
+    width: 250px;
+    background-color: var(--surface);
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    border-right: 1px solid var(--divider);
+    transition: width 0.3s ease;
 }
 
-.quick-buy-btn, .quick-sell-btn {
-    padding: 8px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
+.sidebar.collapsed {
+    width: 60px;
 }
 
-.quick-buy-btn {
-    background-color: var(--success);
-    color: white;
-}
-
-.quick-sell-btn {
-    background-color: var(--loss);
-    color: white;
-}
-
-/* Уведомления */
-.notifications {
-    position: relative;
-}
-
-.notifications-btn {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-}
-
-.notifications-btn:hover {
-    background-color: var(--surface-light);
-}
-
-.notification-count {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: var(--error);
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 0.7rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.sidebar.collapsed .sidebar-header h2,
+.sidebar.collapsed .nav-btn span,
+.sidebar.collapsed .balance-card {
     display: none;
 }
 
-/* Панель быстрой торговли */
-.quick-trade-panel {
-    margin-top: 15px;
-    padding-top: 15px;
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.sidebar-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 10px 0;
+}
+
+.nav-btn {
+    width: 100%;
+    padding: 15px 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-btn:hover {
+    background-color: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.nav-btn.active {
+    background-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.sidebar-footer {
+    padding: 20px;
     border-top: 1px solid var(--divider);
 }
 
-.quick-trade-panel h4 {
-    margin-bottom: 10px;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.quick-trade-buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
-}
-
-.quick-trade-btn {
+.balance-card {
     background-color: var(--surface-light);
-    color: var(--text-primary);
-    border: 1px solid var(--divider);
-    padding: 8px 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
 }
 
-.quick-trade-btn:hover {
-    background-color: var(--primary);
-    border-color: var(--primary);
+.balance-amount {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--success);
+    margin-top: 5px;
 }
 
-/* Модальные окна */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+/* Основной контент */
+.main-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.modal-content {
+.header {
     background-color: var(--surface);
-    margin: 5% auto;
-    padding: 0;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    animation: modalFadeIn 0.3s ease;
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-header {
     padding: 15px 20px;
     border-bottom: 1px solid var(--divider);
     display: flex;
@@ -132,184 +131,773 @@
     align-items: center;
 }
 
-.modal-header h3 {
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    background-color: var(--surface-light);
+}
+
+.header-left h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.header-left p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.current-price-display {
+    background-color: var(--surface-light);
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.asset-price {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.price-change {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.price-change.positive {
+    background-color: rgba(0, 200, 83, 0.2);
+    color: var(--profit);
+}
+
+.price-change.negative {
+    background-color: rgba(255, 82, 82, 0.2);
+    color: var(--loss);
+}
+
+/* Основной контент */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Секция графика */
+.chart-section {
+    background-color: var(--surface);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.asset-select {
+    background-color: var(--surface-light);
+    color: var(--text-primary);
+    border: 1px solid var(--divider);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.timeframe-selector {
+    display: flex;
+    gap: 5px;
+}
+
+.timeframe-btn {
+    background-color: var(--surface-light);
+    color: var(--text-secondary);
+    border: 1px solid var(--divider);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.timeframe-btn:hover {
+    background-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.timeframe-btn.active {
+    background-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    background-color: var(--background);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#candleChart {
+    width: 100%;
+    height: 100%;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-primary);
+    z-index: 1000;
+}
+
+.loader-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--divider);
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.indicator-controls {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.indicator-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.indicator-checkbox input[type="checkbox"] {
+    accent-color: var(--primary);
+}
+
+.indicator-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Секции контента */
+.content-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.content-section {
+    background-color: var(--surface);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.section-header h3 {
     font-size: 1.2rem;
     font-weight: 600;
 }
 
-.modal-close {
+.close-section {
     background: none;
     border: none;
     color: var(--text-secondary);
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+    padding: 5px;
+    border-radius: 4px;
     transition: background-color 0.3s ease;
 }
 
-.modal-close:hover {
+.close-section:hover {
     background-color: var(--surface-light);
     color: var(--text-primary);
 }
 
-.modal-body {
-    padding: 20px;
-    max-height: 60vh;
-    overflow-y: auto;
+/* Стили для учителя */
+.teacher-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.modal-footer {
-    padding: 15px 20px;
-    border-top: 1px solid var(--divider);
-    display: flex;
-    justify-content: flex-end;
+.teacher-message {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.teacher-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 10px;
 }
 
-.modal-btn {
-    padding: 8px 16px;
-    border: none;
+.teacher-action-btn {
+    background-color: var(--surface-light);
+    color: var(--text-primary);
+    border: 1px solid var(--divider);
+    padding: 10px;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
 }
 
-.cancel-btn {
+.teacher-action-btn:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.teacher-dictionary {
     background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.teacher-dictionary h4 {
+    margin-bottom: 10px;
     color: var(--text-primary);
 }
 
-.cancel-btn:hover {
-    background-color: var(--divider);
+.dictionary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
 }
 
-.confirm-btn {
+.dictionary-term {
+    background-color: var(--background);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dictionary-term:hover {
     background-color: var(--primary);
+}
+
+.term-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: block;
+}
+
+.term-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: block;
+}
+
+/* Стили для торговли */
+.trade-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.trade-input {
+    background-color: var(--surface-light);
+    color: var(--text-primary);
+    border: 1px solid var(--divider);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.trade-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.trade-buttons {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.trade-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.trade-btn small {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    font-weight: normal;
+}
+
+.trade-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.buy-btn {
+    background-color: var(--success);
     color: white;
 }
 
-.confirm-btn:hover {
-    background-color: var(--primary-dark);
+.sell-btn {
+    background-color: var(--loss);
+    color: white;
 }
 
-/* Уведомления в модальном окне */
-.notification-item {
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    border-left: 4px solid var(--primary);
+/* Стили для ордеров */
+.order-creation {
+    margin-bottom: 20px;
 }
 
-.notification-item.info {
-    border-left-color: var(--primary);
+.order-creation h4 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
 }
 
-.notification-item.achievement {
-    border-left-color: var(--success);
+.order-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
 }
 
-.notification-item.warning {
-    border-left-color: var(--warning);
+.active-orders h4 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
 }
 
-.notification-item.error {
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.order-item {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--warning);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-item.stop {
     border-left-color: var(--loss);
 }
 
-.notification-item.unread {
-    background-color: var(--surface-light);
+.order-item.take-profit {
+    border-left-color: var(--success);
 }
 
-.notification-item.read {
-    opacity: 0.7;
+.order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-.notification-message {
+.order-type {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.order-details {
     font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.order-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.order-cancel-btn {
+    background-color: var(--loss);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.empty-orders, .empty-history {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 30px;
+    font-style: italic;
+}
+
+/* Стили для рисков */
+.risk-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.risk-results {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 15px;
+    border-top: 1px solid var(--divider);
+}
+
+.risk-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--surface-light);
+    border-radius: 6px;
+}
+
+.risk-result span:first-child {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.risk-result span:last-child {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Стили для портфеля */
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.portfolio-item {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.portfolio-item.total {
+    background-color: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+/* Стили для истории */
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.history-item {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--success);
+}
+
+.history-item.loss {
+    border-left-color: var(--loss);
+}
+
+.history-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.history-type {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.history-details {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.history-amount {
+    font-weight: 600;
+}
+
+.history-amount.profit {
+    color: var(--success);
+}
+
+.history-amount.loss {
+    color: var(--loss);
+}
+
+/* Стили для достижений */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.achievement-card {
+    background-color: var(--surface-light);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.achievement-card.locked {
+    opacity: 0.6;
+    filter: grayscale(1);
+}
+
+.achievement-card.unlocked {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(41, 98, 255, 0.3);
+}
+
+.achievement-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.achievement-title {
+    font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 5px;
 }
 
-.notification-time {
-    font-size: 0.8rem;
+.achievement-desc {
+    font-size: 0.9rem;
     color: var(--text-secondary);
 }
 
-/* Бейдж достижений */
-.achievement-badge {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: var(--success);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
+/* Стили для статистики */
+.journal-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-/* Адаптивность для новых элементов */
+.journal-stat {
+    background-color: var(--surface-light);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Стили для данных */
+.data-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+/* Всплывающая подсказка для графика */
+.chart-tooltip {
+    position: absolute;
+    background-color: rgba(30, 30, 30, 0.95);
+    border: 1px solid var(--divider);
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 0.9rem;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.chart-tooltip .tooltip-header {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.chart-tooltip .tooltip-content {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 5px 15px;
+    color: var(--text-secondary);
+}
+
+.chart-tooltip .tooltip-label {
+    font-weight: 500;
+}
+
+.chart-tooltip .tooltip-value {
+    text-align: right;
+    font-weight: 600;
+}
+
+/* Адаптивность */
 @media (max-width: 768px) {
-    .quick-trade-buttons {
-        grid-template-columns: repeat(2, 1fr);
+    .app-container {
+        flex-direction: column;
     }
     
-    .modal-content {
-        margin: 10% auto;
-        width: 95%;
+    .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--divider);
+    }
+    
+    .sidebar-nav {
+        display: flex;
+        overflow-x: auto;
+        padding: 10px;
+    }
+    
+    .nav-btn {
+        padding: 10px 15px;
+        white-space: nowrap;
+    }
+    
+    .main-content {
+        padding: 15px;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .trade-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .trade-buttons {
+        grid-column: 1;
+    }
+    
+    .order-inputs,
+    .risk-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .portfolio-grid,
+    .achievements-grid {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 480px) {
-    .quick-trade-buttons {
+    .chart-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .timeframe-selector {
+        justify-content: center;
+    }
+    
+    .teacher-controls {
         grid-template-columns: 1fr;
     }
     
-    .modal-footer {
-        flex-direction: column;
+    .journal-stats {
+        grid-template-columns: 1fr 1fr;
     }
-    
-    .modal-btn {
-        width: 100%;
-    }
-}
-
-/* Анимации */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.achievement-card.unlocked {
-    animation: pulse 0.5s ease;
-}
-
-/* Полосы прокрутки */
-.modal-body::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-    background: var(--surface-light);
-    border-radius: 3px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-    background: var(--primary);
-    border-radius: 3px;
-}
-
-.modal-body::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
 }
