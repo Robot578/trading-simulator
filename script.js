@@ -1,6 +1,9 @@
 // Основные переменные
 let chart;
 let candleSeries;
+let smaSeries;
+let emaSeries;
+let rsiSeries;
 let currentData = [];
 let balance = 100.00;
 let portfolio = {
@@ -12,6 +15,11 @@ let tradeHistory = [];
 let activeOrders = [];
 let currentAsset = 'BTC';
 let currentTimeframe = '1h';
+let indicators = {
+    sma: true,
+    ema: false,
+    rsi: false
+};
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -28,6 +36,13 @@ function initializeApp() {
     
     // Инициализация графика
     initializeChart();
+    
+    // Настройка индикаторов из localStorage
+    const savedIndicators = localStorage.getItem('tradelearn_indicators');
+    if (savedIndicators) {
+        indicators = {...indicators, ...JSON.parse(savedIndicators)};
+        updateIndicatorCheckboxes();
+    }
     
     // Обновление UI
     updateUI();
@@ -67,6 +82,25 @@ function setupEventListeners() {
             currentTimeframe = e.currentTarget.dataset.tf;
             loadChartData();
         });
+    });
+    
+    // Индикаторы
+    document.getElementById('sma-toggle').addEventListener('change', (e) => {
+        indicators.sma = e.target.checked;
+        updateIndicators();
+        saveIndicatorsToLocalStorage();
+    });
+    
+    document.getElementById('ema-toggle').addEventListener('change', (e) => {
+        indicators.ema = e.target.checked;
+        updateIndicators();
+        saveIndicatorsToLocalStorage();
+    });
+    
+    document.getElementById('rsi-toggle').addEventListener('change', (e) => {
+        indicators.rsi = e.target.checked;
+        updateIndicators();
+        saveIndicatorsToLocalStorage();
     });
     
     // Торговля
@@ -129,18 +163,37 @@ function initializeChart() {
         wickUpColor: '#00c853',
     });
     
-    // Добавляем SMA
-    const smaSeries = chart.addLineSeries({
+    // Создаем SMA
+    smaSeries = chart.addLineSeries({
         color: '#2962ff',
         lineWidth: 2,
         priceScaleId: 'left',
+        title: 'SMA 20',
     });
     
-    // Добавляем EMA
-    const emaSeries = chart.addLineSeries({
+    // Создаем EMA
+    emaSeries = chart.addLineSeries({
         color: '#ff6d00',
         lineWidth: 2,
         priceScaleId: 'left',
+        title: 'EMA 12',
+    });
+    
+    // Создаем RSI (на отдельной шкале)
+    rsiSeries = chart.addLineSeries({
+        color: '#9c27b0',
+        lineWidth: 2,
+        priceScaleId: 'rsi',
+        title: 'RSI 14',
+    });
+    
+    // Добавляем шкалу для RSI
+    chart.priceScale('rsi').applyOptions({
+        scaleMargins: {
+            top: 0.8,
+            bottom: 0.1,
+        },
+        mode: LightweightCharts.PriceScaleMode.Percentage,
     });
     
     // Настройка подсказки
@@ -168,7 +221,7 @@ async function loadChartData() {
     showLoading();
     
     try {
-        // Симуляция загрузки данных (в реальном приложении здесь был бы API запрос)
+        // Симуляция загрузки данных
         const data = await simulateChartData();
         currentData = data;
         
@@ -219,6 +272,135 @@ async function simulateChartData() {
     });
 }
 
+// Рассчитать индикаторы
+function calculateIndicators(data) {
+    // SMA 20
+    const smaData = calculateSMA(data, 20);
+    
+    // EMA 12
+    const emaData = calculateEMA(data, 12);
+    
+    // RSI 14
+    const rsiData = calculateRSI(data, 14);
+    
+    // Обновляем графики индикаторов
+    smaSeries.setData(smaData);
+    emaSeries.setData(emaData);
+    rsiSeries.setData(rsiData);
+    
+    // Обновляем видимость индикаторов
+    updateIndicators();
+}
+
+// Расчет SMA
+function calculateSMA(data, period) {
+    const result = [];
+    for (let i = period - 1; i < data.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+            sum += data[i - j].close;
+        }
+        result.push({
+            time: data[i].time,
+            value: sum / period
+        });
+    }
+    return result;
+}
+
+// Расчет EMA
+function calculateEMA(data, period) {
+    const result = [];
+    const k = 2 / (period + 1);
+    let ema = data[0].close;
+    
+    result.push({
+        time: data[0].time,
+        value: ema
+    });
+    
+    for (let i = 1; i < data.length; i++) {
+        ema = (data[i].close - ema) * k + ema;
+        result.push({
+            time: data[i].time,
+            value: ema
+        });
+    }
+    return result;
+}
+
+// Расчет RSI
+function calculateRSI(data, period) {
+    const result = [];
+    let gains = 0;
+    let losses = 0;
+    
+    // Первые period-1 значений пропускаем
+    for (let i = 1; i <= period; i++) {
+        const change = data[i].close - data[i - 1].close;
+        if (change >= 0) {
+            gains += change;
+        } else {
+            losses += Math.abs(change);
+        }
+    }
+    
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    
+    for (let i = period + 1; i < data.length; i++) {
+        const change = data[i].close - data[i - 1].close;
+        let currentGain = 0;
+        let currentLoss = 0;
+        
+        if (change >= 0) {
+            currentGain = change;
+        } else {
+            currentLoss = Math.abs(change);
+        }
+        
+        avgGain = (avgGain * (period - 1) + currentGain) / period;
+        avgLoss = (avgLoss * (period - 1) + currentLoss) / period;
+        
+        const rs = avgGain / (avgLoss === 0 ? 1 : avgLoss);
+        const rsi = 100 - (100 / (1 + rs));
+        
+        result.push({
+            time: data[i].time,
+            value: rsi
+        });
+    }
+    
+    return result;
+}
+
+// Обновить видимость индикаторов
+function updateIndicators() {
+    smaSeries.applyOptions({
+        visible: indicators.sma
+    });
+    
+    emaSeries.applyOptions({
+        visible: indicators.ema
+    });
+    
+    rsiSeries.applyOptions({
+        visible: indicators.rsi
+    });
+}
+
+// Обновить чекбоксы индикаторов
+function updateIndicatorCheckboxes() {
+    document.getElementById('sma-toggle').checked = indicators.sma;
+    document.getElementById('ema-toggle').checked = indicators.ema;
+    document.getElementById('rsi-toggle').checked = indicators.rsi;
+}
+
+// Сохранить настройки индикаторов
+function saveIndicatorsToLocalStorage() {
+    localStorage.setItem('tradelearn_indicators', JSON.stringify(indicators));
+}
+
 // Показать секцию
 function showSection(sectionId) {
     hideAllSections();
@@ -267,12 +449,6 @@ function updateCurrentPrice(bar) {
     priceElement.textContent = bar.close.toFixed(2);
     changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
     changeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
-}
-
-// Рассчитать индикаторы
-function calculateIndicators(data) {
-    // Здесь будет расчет SMA, EMA, RSI и других индикаторов
-    // Пока просто заглушка
 }
 
 // Показать подсказку
@@ -508,7 +684,8 @@ function exportData() {
         balance,
         portfolio,
         tradeHistory,
-        activeOrders
+        activeOrders,
+        indicators
     };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -536,9 +713,13 @@ function importData(event) {
             portfolio = data.portfolio || portfolio;
             tradeHistory = data.tradeHistory || tradeHistory;
             activeOrders = data.activeOrders || activeOrders;
+            indicators = data.indicators || indicators;
             
             updateUI();
+            updateIndicatorCheckboxes();
+            updateIndicators();
             saveToLocalStorage();
+            saveIndicatorsToLocalStorage();
             showError('Данные успешно импортированы');
             
         } catch (error) {
@@ -557,9 +738,13 @@ function resetData() {
         portfolio = { 'BTC': 0, 'ETH': 0, 'SOL': 0 };
         tradeHistory = [];
         activeOrders = [];
+        indicators = { sma: true, ema: false, rsi: false };
         
         updateUI();
+        updateIndicatorCheckboxes();
+        updateIndicators();
         saveToLocalStorage();
+        saveIndicatorsToLocalStorage();
         showError('Данные сброшены');
     }
 }
