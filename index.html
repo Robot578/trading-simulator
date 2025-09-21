@@ -120,8 +120,9 @@
                         </div>
                         <div class="teacher-content">
                             <div class="teacher-message" id="teacher-message">
-                                Добро пожаловать! Я помогу вам освоить основы трейдинга.
+                                Добро пожаловать! Я помогу вам освоить основы трейдинга. Что вас интересует?
                             </div>
+                            
                             <div class="teacher-controls">
                                 <button id="teacher-hint" class="teacher-action-btn">💡 Подсказка</button>
                                 <button id="teacher-analysis" class="teacher-action-btn">📊 Анализ</button>
@@ -129,26 +130,78 @@
                                 <button id="teacher-dictionary-btn" class="teacher-action-btn">📖 Словарь</button>
                             </div>
                             
+                            <div class="teacher-questions" style="margin-top: 15px;">
+                                <h4>💬 Задайте вопрос:</h4>
+                                <div class="question-input">
+                                    <input type="text" id="teacher-question" class="trade-input" placeholder="Введите ваш вопрос о трейдинге..." style="width: 100%;">
+                                    <button id="ask-question" class="teacher-action-btn" style="margin-top: 10px;">Спросить</button>
+                                </div>
+                            </div>
+                            
+                            <div class="teacher-lessons" id="teacher-lessons" style="display: none; margin-top: 15px;">
+                                <h4>📚 Доступные уроки:</h4>
+                                <div class="lessons-grid">
+                                    <div class="lesson-card" data-lesson="basics">
+                                        <span class="lesson-title">📖 Основы трейдинга</span>
+                                        <span class="lesson-desc">Базовые понятия и термины</span>
+                                    </div>
+                                    <div class="lesson-card" data-lesson="candles">
+                                        <span class="lesson-title">🕯️ Свечной анализ</span>
+                                        <span class="lesson-desc">Чтение японских свечей</span>
+                                    </div>
+                                    <div class="lesson-card" data-lesson="indicators">
+                                        <span class="lesson-title">📊 Индикаторы</span>
+                                        <span class="lesson-desc">SMA, EMA, RSI и другие</span>
+                                    </div>
+                                    <div class="lesson-card" data-lesson="risk">
+                                        <span class="lesson-title">🛡️ Управление рисками</span>
+                                        <span class="lesson-desc">Стоп-лосс и мани-менеджмент</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="teacher-dictionary" id="teacher-dictionary" style="display: none; margin-top: 15px;">
                                 <h4>📚 Словарь терминов</h4>
                                 <div class="dictionary-grid">
                                     <div class="dictionary-term" data-term="sma">
                                         <span class="term-name">SMA</span>
-                                        <span class="term-desc">Скользящая средняя</span>
+                                        <span class="term-desc">Простая скользящая средняя</span>
                                     </div>
                                     <div class="dictionary-term" data-term="ema">
                                         <span class="term-name">EMA</span>
-                                        <span class="term-desc">Экспоненциальная MA</span>
+                                        <span class="term-desc">Экспоненциальная скользящая средняя</span>
                                     </div>
                                     <div class="dictionary-term" data-term="rsi">
                                         <span class="term-name">RSI</span>
-                                        <span class="term-desc">Индекс силы</span>
+                                        <span class="term-desc">Индекс относительной силы</span>
                                     </div>
                                     <div class="dictionary-term" data-term="stoploss">
                                         <span class="term-name">Stop-Loss</span>
-                                        <span class="term-desc">Стоп-лосс</span>
+                                        <span class="term-desc">Ордер для ограничения убытков</span>
+                                    </div>
+                                    <div class="dictionary-term" data-term="takeprofit">
+                                        <span class="term-name">Take-Profit</span>
+                                        <span class="term-desc">Ордер для фиксации прибыли</span>
+                                    </div>
+                                    <div class="dictionary-term" data-term="leverage">
+                                        <span class="term-name">Кредитное плечо</span>
+                                        <span class="term-desc">Торговля с заемными средствами</span>
+                                    </div>
+                                    <div class="dictionary-term" data-term="bullmarket">
+                                        <span class="term-name">Бычий рынок</span>
+                                        <span class="term-desc">Рост цен, оптимизм</span>
+                                    </div>
+                                    <div class="dictionary-term" data-term="bearmarket">
+                                        <span class="term-name">Медвежий рынок</span>
+                                        <span class="term-desc">Падение цен, пессимизм</span>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="term-details" id="term-details" style="display: none; margin-top: 15px; padding: 15px; background: var(--surface-light); border-radius: 8px;">
+                                <h4 id="term-title">Название термина</h4>
+                                <p id="term-description">Описание термина...</p>
+                                <button id="close-term" class="teacher-action-btn" style="margin-top: 10px;">Закрыть</button>
                             </div>
                         </div>
                     </div>
