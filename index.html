@@ -75,14 +75,19 @@
                 <div class="chart-section">
                     <div class="chart-header">
                         <select id="asset-select" class="asset-select">
-                            <option value="BTC">BTC/USDT</option>
-                            <option value="ETH">ETH/USDT</option>
-                            <option value="SOL">SOL/USDT</option>
+                            <option value="BTCUSDT">BTC/USDT</option>
+                            <option value="ETHUSDT">ETH/USDT</option>
+                            <option value="SOLUSDT">SOL/USDT</option>
+                            <option value="ADAUSDT">ADA/USDT</option>
+                            <option value="DOTUSDT">DOT/USDT</option>
                         </select>
                         <div class="timeframe-selector">
-                            <button class="timeframe-btn active" data-tf="1h">1H</button>
-                            <button class="timeframe-btn" data-tf="4h">4H</button>
-                            <button class="timeframe-btn" data-tf="1d">1D</button>
+                            <button class="timeframe-btn active" data-tf="1m">1m</button>
+                            <button class="timeframe-btn" data-tf="5m">5m</button>
+                            <button class="timeframe-btn" data-tf="15m">15m</button>
+                            <button class="timeframe-btn" data-tf="1h">1h</button>
+                            <button class="timeframe-btn" data-tf="4h">4h</button>
+                            <button class="timeframe-btn" data-tf="1d">1d</button>
                         </div>
                     </div>
                     
@@ -106,6 +111,10 @@
                         <label class="indicator-checkbox">
                             <input type="checkbox" id="rsi-toggle">
                             <span class="indicator-label">RSI (14)</span>
+                        </label>
+                        <label class="indicator-checkbox">
+                            <input type="checkbox" id="volume-toggle" checked>
+                            <span class="indicator-label">Volume</span>
                         </label>
                     </div>
                 </div>
@@ -323,6 +332,14 @@
                             <div class="portfolio-item">
                                 <span>SOL:</span>
                                 <span id="sol-amount">0.000000</span>
+                            </div>
+                            <div class="portfolio-item">
+                                <span>ADA:</span>
+                                <span id="ada-amount">0.000000</span>
+                            </div>
+                            <div class="portfolio-item">
+                                <span>DOT:</span>
+                                <span id="dot-amount">0.000000</span>
                             </div>
                             <div class="portfolio-item total">
                                 <span>Общая стоимость:</span>
