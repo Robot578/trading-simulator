@@ -1,6 +1,7 @@
 // Основные переменные
 let chart;
 let candleSeries;
+let volumeSeries;
 let smaSeries;
 let emaSeries;
 let rsiSeries;
@@ -9,21 +10,25 @@ let balance = 100.00;
 let portfolio = {
     'BTC': 0,
     'ETH': 0, 
-    'SOL': 0
+    'SOL': 0,
+    'ADA': 0,
+    'DOT': 0
 };
 let tradeHistory = [];
 let activeOrders = [];
-let currentAsset = 'BTC';
-let currentTimeframe = '1h';
+let currentAsset = 'BTCUSDT';
+let currentTimeframe = '1m';
 let indicators = {
     sma: true,
     ema: false,
-    rsi: false
+    rsi: false,
+    volume: true
 };
+let wsConnection = null;
+let realTimeData = null;
 
 // База знаний учителя
 const teacherKnowledge = {
-    // База знаний для ответов на вопросы
     questions: {
         'что такое трейдинг': 'Трейдинг - это торговля финансовыми инструментами с целью получения прибыли от изменения их цены.',
         'как начать торговать': 'Начните с изучения основ, откройте демо-счет, разработайте стратегию и торгуйте на небольшие суммы.',
@@ -37,7 +42,6 @@ const teacherKnowledge = {
         'какие индикаторы использовать': 'Начните с SMA, EMA, RSI и MACD. Каждый индикатор имеет свои особенности и сигналы.'
     },
 
-    // Уроки
     lessons: {
         'basics': {
             title: '📖 Основы трейдинга',
@@ -91,7 +95,6 @@ const teacherKnowledge = {
         }
     },
 
-    // Словарь терминов
     dictionary: {
         'sma': {
             title: 'SMA (Simple Moving Average)',
@@ -127,11 +130,9 @@ const teacherKnowledge = {
         }
     },
 
-    // Умные ответы на вопросы
     getSmartAnswer: function(question) {
         question = question.toLowerCase();
         
-        // Проверка конкретных тем
         if (question.includes('как выбрать') && question.includes('актив')) {
             return "Выбирайте активы с хорошим объемом торгов, изучайте их фундаментальные показатели и следите за новостями.";
         }
@@ -152,7 +153,6 @@ const teacherKnowledge = {
             return "Частые ошибки новичков: 1) Торговля без стоп-лосса 2) Излишний риск 3) Эмоциональные решения 4) Отсутствие торгового плана 5) Погоня за убытками.";
         }
         
-        // Общий ответ, если не найдено конкретного
         return "Хороший вопрос! Рекомендую изучить этот topic в разделе 'Уроки' или спросите более конкретно.";
     }
 };
@@ -161,32 +161,26 @@ const teacherKnowledge = {
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
-    loadChartData();
-    updateUI();
+    loadHistoricalData();
+    connectWebSocket();
 });
 
 // Инициализация приложения
 function initializeApp() {
-    // Загрузка данных из localStorage
     loadFromLocalStorage();
-    
-    // Инициализация графика
     initializeChart();
     
-    // Настройка индикаторов из localStorage
     const savedIndicators = localStorage.getItem('tradelearn_indicators');
     if (savedIndicators) {
         indicators = {...indicators, ...JSON.parse(savedIndicators)};
         updateIndicatorCheckboxes();
     }
     
-    // Обновление UI
     updateUI();
 }
 
 // Настройка обработчиков событий
 function setupEventListeners() {
-    // Навигация
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const section = e.currentTarget.dataset.section;
@@ -194,33 +188,36 @@ function setupEventListeners() {
         });
     });
     
-    // Закрытие секций
     document.querySelectorAll('.close-section').forEach(btn => {
         btn.addEventListener('click', () => {
             hideAllSections();
         });
     });
     
-    // Переключение сайдбара
     document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
     
-    // Выбор актива
     document.getElementById('asset-select').addEventListener('change', (e) => {
         currentAsset = e.target.value;
-        loadChartData();
+        if (wsConnection) {
+            wsConnection.close();
+        }
+        loadHistoricalData();
+        connectWebSocket();
     });
     
-    // Таймфреймы
     document.querySelectorAll('.timeframe-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
             currentTimeframe = e.currentTarget.dataset.tf;
-            loadChartData();
+            if (wsConnection) {
+                wsConnection.close();
+            }
+            loadHistoricalData();
+            connectWebSocket();
         });
     });
     
-    // Индикаторы
     document.getElementById('sma-toggle').addEventListener('change', (e) => {
         indicators.sma = e.target.checked;
         updateIndicators();
@@ -239,15 +236,18 @@ function setupEventListeners() {
         saveIndicatorsToLocalStorage();
     });
     
-    // Торговля
+    document.getElementById('volume-toggle').addEventListener('change', (e) => {
+        indicators.volume = e.target.checked;
+        updateIndicators();
+        saveIndicatorsToLocalStorage();
+    });
+    
     document.getElementById('buy-btn').addEventListener('click', () => executeTrade('buy'));
     document.getElementById('sell-btn').addEventListener('click', () => executeTrade('sell'));
     document.getElementById('buy-max-btn').addEventListener('click', buyMax);
     
-    // Риск менеджмент
     document.getElementById('calculate-risk').addEventListener('click', calculateRisk);
     
-    // Учитель
     document.getElementById('teacher-hint').addEventListener('click', showTeacherHint);
     document.getElementById('teacher-analysis').addEventListener('click', showTeacherAnalysis);
     document.getElementById('teacher-lesson').addEventListener('click', showTeacherLesson);
@@ -260,7 +260,6 @@ function setupEventListeners() {
         document.getElementById('term-details').style.display = 'none';
     });
     
-    // Учитель - уроки
     document.querySelectorAll('.lesson-card').forEach(card => {
         card.addEventListener('click', (e) => {
             const lessonId = e.currentTarget.dataset.lesson;
@@ -268,7 +267,6 @@ function setupEventListeners() {
         });
     });
     
-    // Учитель - словарь
     document.querySelectorAll('.dictionary-term').forEach(term => {
         term.addEventListener('click', (e) => {
             const termId = e.currentTarget.dataset.term;
@@ -276,13 +274,11 @@ function setupEventListeners() {
         });
     });
     
-    // Данные
     document.getElementById('export-btn').addEventListener('click', exportData);
     document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
     document.getElementById('import-file').addEventListener('change', importData);
     document.getElementById('reset-btn').addEventListener('click', resetData);
     
-    // Ордера
     document.getElementById('create-order-btn').addEventListener('click', createOrder);
 }
 
@@ -290,15 +286,14 @@ function setupEventListeners() {
 function initializeChart() {
     const chartContainer = document.getElementById('candleChart');
     
-    // Создаем график
     chart = LightweightCharts.createChart(chartContainer, {
         layout: {
             background: { color: '#121212' },
             textColor: 'rgba(255, 255, 255, 0.9)',
         },
         grid: {
-            vertLines: { color: 'rgba(42, 46, 57, 0.5)' },
-            horzLines: { color: 'rgba(42, 46, 57, 0.5)' },
+            vertLines: { color: 'rgba(42, 46, 57, 0.3)' },
+            horzLines: { color: 'rgba(42, 46, 57, 0.3)' },
         },
         timeScale: {
             timeVisible: true,
@@ -312,7 +307,6 @@ function initializeChart() {
         height: chartContainer.clientHeight,
     });
     
-    // Создаем свечную серию
     candleSeries = chart.addCandlestickSeries({
         upColor: '#00c853',
         downColor: '#ff5252',
@@ -322,23 +316,33 @@ function initializeChart() {
         wickUpColor: '#00c853',
     });
     
-    // Создаем SMA
+    volumeSeries = chart.addHistogramSeries({
+        color: '#26a69a',
+        priceFormat: {
+            type: 'volume',
+        },
+        priceScaleId: 'volume',
+    });
+    
+    chart.priceScale('volume').applyOptions({
+        scaleMargins: {
+            top: 0.8,
+            bottom: 0,
+        },
+    });
+    
     smaSeries = chart.addLineSeries({
         color: '#2962ff',
         lineWidth: 2,
-        priceScaleId: 'left',
         title: 'SMA 20',
     });
     
-    // Создаем EMA
     emaSeries = chart.addLineSeries({
         color: '#ff6d00',
         lineWidth: 2,
-        priceScaleId: 'left',
         title: 'EMA 12',
     });
     
-    // Создаем RSI (на отдельной шкале)
     rsiSeries = chart.addLineSeries({
         color: '#9c27b0',
         lineWidth: 2,
@@ -346,16 +350,13 @@ function initializeChart() {
         title: 'RSI 14',
     });
     
-    // Добавляем шкалу для RSI
     chart.priceScale('rsi').applyOptions({
         scaleMargins: {
-            top: 0.8,
+            top: 0.7,
             bottom: 0.1,
         },
-        mode: LightweightCharts.PriceScaleMode.Percentage,
     });
     
-    // Настройка подсказки
     chart.subscribeCrosshairMove(param => {
         if (!param.point) return;
         
@@ -367,7 +368,6 @@ function initializeChart() {
         }
     });
     
-    // Обработка ресайза
     new ResizeObserver(entries => {
         if (entries.length === 0) return;
         const { width, height } = entries[0].contentRect;
@@ -375,79 +375,127 @@ function initializeChart() {
     }).observe(chartContainer);
 }
 
-// Загрузка данных графика
-async function loadChartData() {
+// Загрузка исторических данных с Binance
+async function loadHistoricalData() {
     showLoading();
     
     try {
-        // Симуляция загрузки данных
-        const data = await simulateChartData();
-        currentData = data;
+        const symbol = currentAsset;
+        const interval = currentTimeframe;
+        const limit = 500;
         
-        // Обновляем график
-        candleSeries.setData(data);
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
+        const klines = await response.json();
         
-        // Обновляем текущую цену
-        updateCurrentPrice(data[data.length - 1]);
+        const candleData = klines.map(k => ({
+            time: k[0] / 1000,
+            open: parseFloat(k[1]),
+            high: parseFloat(k[2]),
+            low: parseFloat(k[3]),
+            close: parseFloat(k[4]),
+            volume: parseFloat(k[5])
+        }));
         
-        // Рассчитываем индикаторы
-        calculateIndicators(data);
+        const volumeData = klines.map(k => ({
+            time: k[0] / 1000,
+            value: parseFloat(k[5]),
+            color: parseFloat(k[4]) >= parseFloat(k[1]) ? 'rgba(0, 200, 83, 0.5)' : 'rgba(255, 82, 82, 0.5)'
+        }));
+        
+        currentData = candleData;
+        
+        candleSeries.setData(candleData);
+        volumeSeries.setData(volumeData);
+        
+        updateCurrentPrice(candleData[candleData.length - 1]);
+        calculateIndicators(candleData);
         
     } catch (error) {
         console.error('Ошибка загрузки данных:', error);
-        showError('Не удалось загрузить данные графика');
+        showError('Не удалось загрузить данные с Binance');
     } finally {
         hideLoading();
     }
 }
 
-// Симуляция данных графика
-async function simulateChartData() {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const now = Date.now();
-            const data = [];
-            let price = 50000 + Math.random() * 10000;
+// Подключение к WebSocket для реального времени
+function connectWebSocket() {
+    if (wsConnection) {
+        wsConnection.close();
+    }
+    
+    const symbol = currentAsset.toLowerCase();
+    const stream = `${symbol}@kline_${currentTimeframe}`;
+    
+    wsConnection = new WebSocket(`wss://stream.binance.com:9443/ws/${stream}`);
+    
+    wsConnection.onopen = () => {
+        console.log('WebSocket подключен');
+    };
+    
+    wsConnection.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.k) {
+            const kline = data.k;
+            const newCandle = {
+                time: kline.t / 1000,
+                open: parseFloat(kline.o),
+                high: parseFloat(kline.h),
+                low: parseFloat(kline.l),
+                close: parseFloat(kline.c),
+                volume: parseFloat(kline.v)
+            };
             
-            for (let i = 100; i > 0; i--) {
-                const time = now - i * 3600000;
-                const open = price;
-                const change = (Math.random() - 0.5) * 200;
-                price = price + change;
-                const high = Math.max(open, price) + Math.random() * 100;
-                const low = Math.min(open, price) - Math.random() * 100;
-                const close = price;
+            const newVolume = {
+                time: kline.t / 1000,
+                value: parseFloat(kline.v),
+                color: parseFloat(kline.c) >= parseFloat(kline.o) ? 'rgba(0, 200, 83, 0.5)' : 'rgba(255, 82, 82, 0.5)'
+            };
+            
+            if (!kline.x) {
+                candleSeries.update(newCandle);
+                volumeSeries.update(newVolume);
+            } else {
+                currentData.push(newCandle);
+                if (currentData.length > 500) {
+                    currentData.shift();
+                }
                 
-                data.push({
-                    time: Math.floor(time / 1000),
-                    open: open,
-                    high: high,
-                    low: low,
-                    close: close
-                });
+                candleSeries.update(newCandle);
+                volumeSeries.update(newVolume);
+                
+                updateCurrentPrice(newCandle);
+                calculateIndicators(currentData);
             }
-            resolve(data);
-        }, 1000);
-    });
+            
+            realTimeData = newCandle;
+        }
+    };
+    
+    wsConnection.onerror = (error) => {
+        console.error('WebSocket ошибка:', error);
+    };
+    
+    wsConnection.onclose = () => {
+        console.log('WebSocket отключен');
+        setTimeout(() => connectWebSocket(), 5000);
+    };
 }
 
-// Рассчитать индикаторы
+// Расчет индикаторов
 function calculateIndicators(data) {
-    // SMA 20
+    if (data.length < 20) return;
+    
     const smaData = calculateSMA(data, 20);
-    
-    // EMA 12
-    const emaData = calculateEMA(data, 12);
-    
-    // RSI 14
-    const rsiData = calculateRSI(data, 14);
-    
-    // Обновляем графики индикаторов
     smaSeries.setData(smaData);
+    
+    const emaData = calculateEMA(data, 12);
     emaSeries.setData(emaData);
+    
+    const rsiData = calculateRSI(data, 14);
     rsiSeries.setData(rsiData);
     
-    // Обновляем видимость индикаторов
     updateIndicators();
 }
 
@@ -473,13 +521,12 @@ function calculateEMA(data, period) {
     const k = 2 / (period + 1);
     let ema = data[0].close;
     
-    result.push({
-        time: data[0].time,
-        value: ema
-    });
-    
-    for (let i = 1; i < data.length; i++) {
-        ema = (data[i].close - ema) * k + ema;
+    for (let i = 0; i < data.length; i++) {
+        if (i === 0) {
+            ema = data[i].close;
+        } else {
+            ema = (data[i].close - ema) * k + ema;
+        }
         result.push({
             time: data[i].time,
             value: ema
@@ -494,7 +541,6 @@ function calculateRSI(data, period) {
     let gains = 0;
     let losses = 0;
     
-    // Первые period-1 значений пропускаем
     for (let i = 1; i <= period; i++) {
         const change = data[i].close - data[i - 1].close;
         if (change >= 0) {
@@ -509,17 +555,9 @@ function calculateRSI(data, period) {
     
     for (let i = period + 1; i < data.length; i++) {
         const change = data[i].close - data[i - 1].close;
-        let currentGain = 0;
-        let currentLoss = 0;
         
-        if (change >= 0) {
-            currentGain = change;
-        } else {
-            currentLoss = Math.abs(change);
-        }
-        
-        avgGain = (avgGain * (period - 1) + currentGain) / period;
-        avgLoss = (avgLoss * (period - 1) + currentLoss) / period;
+        avgGain = (avgGain * (period - 1) + Math.max(change, 0)) / period;
+        avgLoss = (avgLoss * (period - 1) + Math.max(-change, 0)) / period;
         
         const rs = avgGain / (avgLoss === 0 ? 1 : avgLoss);
         const rsi = 100 - (100 / (1 + rs));
@@ -546,6 +584,10 @@ function updateIndicators() {
     rsiSeries.applyOptions({
         visible: indicators.rsi
     });
+    
+    volumeSeries.applyOptions({
+        visible: indicators.volume
+    });
 }
 
 // Обновить чекбоксы индикаторов
@@ -553,6 +595,7 @@ function updateIndicatorCheckboxes() {
     document.getElementById('sma-toggle').checked = indicators.sma;
     document.getElementById('ema-toggle').checked = indicators.ema;
     document.getElementById('rsi-toggle').checked = indicators.rsi;
+    document.getElementById('volume-toggle').checked = indicators.volume;
 }
 
 // Сохранить настройки индикаторов
@@ -593,21 +636,25 @@ function hideLoading() {
 
 // Показать ошибку
 function showError(message) {
-    // Реализация показа ошибок
-    console.error(message);
+    alert(message);
 }
 
 // Обновить текущую цену
 function updateCurrentPrice(bar) {
     const priceElement = document.getElementById('current-price');
     const changeElement = document.getElementById('price-change');
+    const assetElement = document.getElementById('current-asset');
     
     const prevPrice = currentData.length > 1 ? currentData[currentData.length - 2].close : bar.open;
     const change = ((bar.close - prevPrice) / prevPrice) * 100;
     
+    assetElement.textContent = currentAsset.replace('USDT', '/USDT');
     priceElement.textContent = bar.close.toFixed(2);
     changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
     changeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+    
+    priceElement.classList.add('price-update');
+    setTimeout(() => priceElement.classList.remove('price-update'), 1000);
 }
 
 // Показать подсказку
@@ -656,8 +703,14 @@ function hideTooltip() {
 
 // Выполнить сделку
 function executeTrade(type) {
+    if (!realTimeData) {
+        showError('Нет данных о текущей цене');
+        return;
+    }
+    
     const amount = parseFloat(document.getElementById('trade-amount').value);
-    const currentPrice = currentData[currentData.length - 1].close;
+    const currentPrice = realTimeData.close;
+    const assetSymbol = currentAsset.replace('USDT', '');
     
     if (isNaN(amount) || amount <= 0) {
         showError('Введите корректную сумму');
@@ -671,12 +724,12 @@ function executeTrade(type) {
         }
         
         const assetAmount = amount / currentPrice;
-        portfolio[currentAsset] = (portfolio[currentAsset] || 0) + assetAmount;
+        portfolio[assetSymbol] = (portfolio[assetSymbol] || 0) + assetAmount;
         balance -= amount;
         
         tradeHistory.push({
             type: 'buy',
-            asset: currentAsset,
+            asset: assetSymbol,
             amount: assetAmount,
             price: currentPrice,
             total: amount,
@@ -686,17 +739,17 @@ function executeTrade(type) {
     } else if (type === 'sell') {
         const assetAmount = amount / currentPrice;
         
-        if (assetAmount > (portfolio[currentAsset] || 0)) {
+        if (assetAmount > (portfolio[assetSymbol] || 0)) {
             showError('Недостаточно актива');
             return;
         }
         
-        portfolio[currentAsset] = (portfolio[currentAsset] || 0) - assetAmount;
+        portfolio[assetSymbol] = (portfolio[assetSymbol] || 0) - assetAmount;
         balance += amount;
         
         tradeHistory.push({
             type: 'sell',
-            asset: currentAsset,
+            asset: assetSymbol,
             amount: assetAmount,
             price: currentPrice,
             total: amount,
@@ -711,7 +764,12 @@ function executeTrade(type) {
 
 // Купить на все средства
 function buyMax() {
-    const currentPrice = currentData[currentData.length - 1].close;
+    if (!realTimeData) {
+        showError('Нет данных о текущей цене');
+        return;
+    }
+    
+    const currentPrice = realTimeData.close;
     const maxAmount = balance;
     document.getElementById('trade-amount').value = maxAmount.toFixed(2);
     executeTrade('buy');
@@ -758,8 +816,13 @@ function showTeacherHint() {
 
 // Показать анализ учителя
 function showTeacherAnalysis() {
-    const currentPrice = currentData[currentData.length - 1].close;
-    const analysis = `Текущая цена ${currentAsset}: ${currentPrice.toFixed(2)}. `;
+    if (!realTimeData) {
+        document.getElementById('teacher-message').textContent = "Нет данных для анализа. Подождите загрузки графика.";
+        return;
+    }
+    
+    const currentPrice = realTimeData.close;
+    const analysis = `Текущая цена ${currentAsset.replace('USDT', '/USDT')}: ${currentPrice.toFixed(2)}. `;
     
     document.getElementById('teacher-message').textContent = analysis + "Рекомендую изучить график и индикаторы.";
 }
@@ -789,7 +852,6 @@ function answerQuestion() {
     
     let answer = "Извините, я не понял вопрос. Попробуйте спросить о: трейдинге, индикаторах, рисках, стоп-лоссе или тейк-профите.";
     
-    // Поиск ответа в базе знаний
     for (const [key, value] of Object.entries(teacherKnowledge.questions)) {
         if (question.includes(key)) {
             answer = value;
@@ -797,7 +859,6 @@ function answerQuestion() {
         }
     }
     
-    // Специальные ответы на приветствия
     if (question.includes('привет') || question.includes('здравств')) {
         answer = "Привет! Я ваш учитель по трейдингу. Задавайте вопросы, и я с радостью помогу!";
     }
@@ -806,7 +867,6 @@ function answerQuestion() {
         answer = "Пожалуйста! Всегда рад помочь. Удачи в трейдинге! 🚀";
     }
     
-    // Умные ответы на сложные вопросы
     if (answer === "Извините, я не понял вопрос...") {
         answer = teacherKnowledge.getSmartAnswer(question);
     }
@@ -854,6 +914,11 @@ function toggleDictionary() {
 
 // Создать ордер
 function createOrder() {
+    if (!realTimeData) {
+        showError('Нет данных о текущей цене');
+        return;
+    }
+    
     const orderType = document.getElementById('order-type').value;
     const orderPrice = parseFloat(document.getElementById('order-price').value);
     const orderAmount = parseFloat(document.getElementById('order-amount').value);
@@ -867,14 +932,13 @@ function createOrder() {
         type: orderType,
         price: orderPrice,
         amount: orderAmount,
-        asset: currentAsset,
+        asset: currentAsset.replace('USDT', ''),
         timestamp: Date.now()
     });
     
     updateOrdersList();
     saveToLocalStorage();
     
-    // Очищаем поля
     document.getElementById('order-price').value = '';
     document.getElementById('order-amount').value = '';
 }
@@ -967,10 +1031,10 @@ function importData(event) {
 function resetData() {
     if (confirm('Вы уверены? Все данные будут удалены.')) {
         balance = 100.00;
-        portfolio = { 'BTC': 0, 'ETH': 0, 'SOL': 0 };
+        portfolio = { 'BTC': 0, 'ETH': 0, 'SOL': 0, 'ADA': 0, 'DOT': 0 };
         tradeHistory = [];
         activeOrders = [];
-        indicators = { sma: true, ema: false, rsi: false };
+        indicators = { sma: true, ema: false, rsi: false, volume: true };
         
         updateUI();
         updateIndicatorCheckboxes();
@@ -983,26 +1047,24 @@ function resetData() {
 
 // Обновление интерфейса
 function updateUI() {
-    // Баланс
     document.getElementById('balance').textContent = balance.toFixed(2) + ' USDT';
     
-    // Портфель
     document.getElementById('btc-amount').textContent = portfolio.BTC.toFixed(6);
     document.getElementById('eth-amount').textContent = portfolio.ETH.toFixed(6);
     document.getElementById('sol-amount').textContent = portfolio.SOL.toFixed(6);
+    document.getElementById('ada-amount').textContent = portfolio.ADA.toFixed(6);
+    document.getElementById('dot-amount').textContent = portfolio.DOT.toFixed(6);
     
-    // Общая стоимость
-    const currentPrice = currentData.length > 0 ? currentData[currentData.length - 1].close : 0;
-    const totalValue = balance + (portfolio.BTC * currentPrice) + (portfolio.ETH * currentPrice * 0.05) + (portfolio.SOL * currentPrice * 0.001);
+    const currentPrice = realTimeData ? realTimeData.close : 0;
+    let totalValue = balance;
+    Object.keys(portfolio).forEach(asset => {
+        totalValue += portfolio[asset] * currentPrice;
+    });
+    
     document.getElementById('total-value').textContent = totalValue.toFixed(2) + ' USDT';
     
-    // История
     updateHistoryList();
-    
-    // Ордера
     updateOrdersList();
-    
-    // Статистика
     updateStatistics();
 }
 
@@ -1070,5 +1132,4 @@ function loadFromLocalStorage() {
     }
 }
 
-// Глобальные функции для обработки событий
 window.cancelOrder = cancelOrder;
