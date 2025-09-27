@@ -308,23 +308,42 @@ body {
     gap: 15px;
     margin-top: 15px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .indicator-checkbox {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     cursor: pointer;
+    padding: 8px 12px;
+    background-color: var(--surface-light);
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.indicator-checkbox:hover {
+    background-color: var(--primary);
 }
 
 .indicator-checkbox input[type="checkbox"] {
     accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }
 
 .indicator-label {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
+    font-weight: 500;
 }
+
+/* Цвета индикаторов */
+.indicator-sma { color: #2962ff; }
+.indicator-ema { color: #ff6d00; }
+.indicator-rsi { color: #9c27b0; }
+.indicator-volume { color: #26a69a; }
 
 /* Секции контента */
 .content-sections {
@@ -896,6 +915,17 @@ body {
     color: var(--text-secondary);
 }
 
+/* Анимация обновления цены */
+@keyframes priceUpdate {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(0, 200, 83, 0.2); }
+    100% { background-color: transparent; }
+}
+
+.price-update {
+    animation: priceUpdate 1s ease-in-out;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .app-container {
@@ -960,6 +990,16 @@ body {
     .dictionary-grid {
         grid-template-columns: 1fr;
     }
+    
+    .timeframe-selector {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .timeframe-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -980,52 +1020,7 @@ body {
     .journal-stats {
         grid-template-columns: 1fr 1fr;
     }
-}
-
-/* Дополнительные стили для индикаторов */
-.indicator-controls {
-    display: flex;
-    gap: 15px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.indicator-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    padding: 8px 12px;
-    background-color: var(--surface-light);
-    border-radius: 6px;
-    transition: background-color 0.3s ease;
-}
-
-.indicator-checkbox:hover {
-    background-color: var(--primary);
-}
-
-.indicator-checkbox input[type="checkbox"] {
-    accent-color: var(--primary);
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
-.indicator-label {
-    font-size: 0.9rem;
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-/* Цвета индикаторов для подсказки */
-.indicator-sma { color: #2962ff; }
-.indicator-ema { color: #ff6d00; }
-.indicator-rsi { color: #9c27b0; }
-
-/* Адаптивность для индикаторов */
-@media (max-width: 480px) {
+    
     .indicator-controls {
         flex-direction: column;
         align-items: flex-start;
