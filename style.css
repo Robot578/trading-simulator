@@ -344,6 +344,9 @@ body {
 .indicator-ema { color: #ff6d00; }
 .indicator-rsi { color: #9c27b0; }
 .indicator-volume { color: #26a69a; }
+.indicator-macd { color: #ff4081; }
+.indicator-bollinger { color: #4caf50; }
+.indicator-stochastic { color: #ff9800; }
 
 /* Секции контента */
 .content-sections {
@@ -586,6 +589,14 @@ body {
     border-left-color: var(--success);
 }
 
+.order-item.limit {
+    border-left-color: var(--primary);
+}
+
+.order-item.trailing-stop {
+    border-left-color: var(--secondary);
+}
+
 .order-info {
     display: flex;
     flex-direction: column;
@@ -744,6 +755,7 @@ body {
     border-radius: 8px;
     text-align: center;
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .achievement-card.locked {
@@ -771,6 +783,12 @@ body {
 .achievement-desc {
     font-size: 0.9rem;
     color: var(--text-secondary);
+}
+
+.achievement-reward {
+    font-size: 0.8rem;
+    color: var(--warning);
+    margin-top: 5px;
 }
 
 /* Стили для статистики */
@@ -926,6 +944,136 @@ body {
     animation: priceUpdate 1s ease-in-out;
 }
 
+/* Новые стили для улучшений */
+.leverage-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.leverage-slider {
+    flex: 1;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.stat-card h4 {
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.performance-chart {
+    height: 200px;
+    background-color: var(--background);
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.quests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.quest-card {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid var(--warning);
+}
+
+.quest-card.completed {
+    border-left-color: var(--success);
+}
+
+.quest-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.quest-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.quest-progress {
+    background-color: var(--background);
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.quest-progress-bar {
+    height: 100%;
+    background-color: var(--primary);
+    transition: width 0.3s ease;
+}
+
+.quest-reward {
+    font-size: 0.8rem;
+    color: var(--warning);
+}
+
+.trading-fees-display {
+    background-color: var(--surface-light);
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+}
+
+.advanced-indicators {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--divider);
+}
+
+.heat-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.heat-map-item {
+    background-color: var(--surface-light);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.heat-map-item:hover {
+    transform: scale(1.05);
+}
+
+.heat-map-value {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.heat-map-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .app-container {
@@ -999,6 +1147,14 @@ body {
     .timeframe-btn {
         padding: 4px 8px;
         font-size: 0.7rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quests-grid {
+        grid-template-columns: 1fr;
     }
 }
 
